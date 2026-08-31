@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "checkedAt": "2026-08-31T00:00:00.000Z",
+  "projectHash": "52ccc8ea853fa826c65b06cb00cc5f9db219aaaf0aa49d5f931722f371c07392",
+  "localHash": "54bb8dd3bfa1f212a39e45bb54e9ca789a5ffb1212f15d2db67bf5271e5b205a",
+  "providerContract": { "status": "PASS", "contractVersion": 1, "adapter": "provider", "adapterHash": "b93cb035be8fa00548d3e775b09fbcf34c0ae39798b24cc785952cfd517f1afa" },
+  "verifierProof": { "status": "PASS", "evidence": "evidence/setup-response.json", "evidenceHash": "3f5614f5d6c6f72d2e8032079ade0f7855a30ed0ed96489a532a42ad1469170a", "verifierHash": "0ad9ae37c94d99d6875c74ab7d4743226b7178a0d7573a077e3affca9999cd74", "sourceHash": "ba4cc3ceb48655e80f189666f3c3b00a659090d2d8f23692f5fd14f4aa17080f" }
+}

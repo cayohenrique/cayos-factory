@@ -1,0 +1,3 @@
+#!/usr/bin/env node
+import {readFile} from "node:fs/promises";import path from "node:path";import {fileURLToPath} from "node:url";
+const ref=process.argv[2],errors={"fake:UNAUTHENTICATED":"UNAUTHENTICATED","fake:UNAUTHORIZED":"UNAUTHORIZED","fake:AMBIGUOUS":"AMBIGUOUS","fake:RATE-LIMITED":"RATE_LIMITED","fake:TRANSPORT":"TRANSPORT","fake:MISSING":"NOT_FOUND"};if(errors[ref]){console.error(JSON.stringify({error:errors[ref]}));process.exit(2);}if(ref!=="fake:SAFE-1"){console.error(JSON.stringify({error:"NOT_FOUND"}));process.exit(2);}console.log(await readFile(path.join(path.dirname(fileURLToPath(import.meta.url)),"ticket.json"),"utf8"));

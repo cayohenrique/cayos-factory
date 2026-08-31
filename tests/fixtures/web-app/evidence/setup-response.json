@@ -1,0 +1,5 @@
+{
+  "action": "GET /",
+  "status": 200,
+  "body": "hello from fixture"
+}

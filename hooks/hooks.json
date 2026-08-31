@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [{ "command": "node ${CURSOR_PLUGIN_ROOT}/scripts/stage-guard.mjs" }],
+    "beforeMCPExecution": [{ "command": "node ${CURSOR_PLUGIN_ROOT}/scripts/stage-guard.mjs" }],
+    "beforeFileEdit": [{ "command": "node ${CURSOR_PLUGIN_ROOT}/scripts/stage-guard.mjs" }],
+    "beforeSubagentExecution": [{ "command": "node ${CURSOR_PLUGIN_ROOT}/scripts/stage-guard.mjs" }],
+    "afterShellExecution": [{ "command": "node ${CURSOR_PLUGIN_ROOT}/scripts/record-hook-event.mjs" }],
+    "afterMCPExecution": [{ "command": "node ${CURSOR_PLUGIN_ROOT}/scripts/record-hook-event.mjs" }],
+    "userPromptSubmitted": [{ "command": "node ${CURSOR_PLUGIN_ROOT}/scripts/record-user-message.mjs" }]
+  }
+}

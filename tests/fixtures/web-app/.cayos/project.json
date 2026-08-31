@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "project": { "name": "fixture-web" },
+  "ticketProvider": { "type": "fake", "binding": "cli", "referencePattern": "^fake:[A-Z0-9-]+$", "readOnly": true },
+  "codeHost": { "type": "github", "remote": "origin", "autoMerge": false },
+  "verification": { "skill": ".cursor/skills/verify-fixture-web", "sourcePaths": ["app.mjs"] }
+}
