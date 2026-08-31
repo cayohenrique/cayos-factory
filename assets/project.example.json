@@ -1,6 +1,19 @@
 {
-  "version": 1,
+  "version": 2,
   "project": { "name": "my-project" },
+  "repositories": { "related": [] },
+  "standards": {
+    "status": "approved",
+    "sources": [{ "repository": "primary", "path": "AGENTS.md", "sha256": "<SHA-256>", "decision": "approved" }],
+    "fallbacks": [".cayos/standards/typescript.md"],
+    "approvedAt": "<ISO-8601>"
+  },
+  "architecture": {
+    "status": "approved",
+    "document": ".cayos/architecture.md",
+    "followByDefault": true,
+    "approvedAt": "<ISO-8601>"
+  },
   "ticketProvider": { "type": "clickup", "binding": "mcp", "referencePattern": "^(clickup:)?[A-Za-z0-9_-]+$", "readOnly": true },
   "codeHost": { "type": "github", "remote": "origin", "autoMerge": false },
   "verification": { "skill": ".cursor/skills/verify-my-project", "sourcePaths": ["src"] }

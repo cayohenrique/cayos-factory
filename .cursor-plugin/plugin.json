@@ -1,7 +1,7 @@
 {
   "name": "cayos-factory",
   "displayName": "Cayos Factory",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Approval-gated software factory for delivering tickets safely in Cursor.",
   "author": { "name": "Cayo Henrique" },
   "license": "MIT",

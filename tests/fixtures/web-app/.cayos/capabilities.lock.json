@@ -1,8 +1,16 @@
 {
   "version": 1,
   "checkedAt": "2026-08-31T00:00:00.000Z",
-  "projectHash": "52ccc8ea853fa826c65b06cb00cc5f9db219aaaf0aa49d5f931722f371c07392",
+  "projectHash": "f1d24dfae485ed3a610d0e03e8116548abdc57e55bfb084f008f7f1ffb40ce1e",
   "localHash": "54bb8dd3bfa1f212a39e45bb54e9ca789a5ffb1212f15d2db67bf5271e5b205a",
   "providerContract": { "status": "PASS", "contractVersion": 1, "adapter": "provider", "adapterHash": "b93cb035be8fa00548d3e775b09fbcf34c0ae39798b24cc785952cfd517f1afa" },
+  "discoveryProof": {
+    "status": "PASS",
+    "report": ".cayos/discovery-report.json",
+    "reportHash": "0e05e9228b225dae13c89078bfa7fa39c796e7b7b6311488f555624499c00116",
+    "architecture": ".cayos/architecture.md",
+    "architectureHash": "71f0cac5130e061b2a53656b2d8ab4c84ee26bc5d657514ecb4aff1d94aeab1a",
+    "standards": [{ "path": ".cayos/standards/javascript.md", "sha256": "b4d9ac0e5416fb13008d7eac8058e293f9043d67d2ebdc1dce68cfc70ba6d8c9" }]
+  },
   "verifierProof": { "status": "PASS", "evidence": "evidence/setup-response.json", "evidenceHash": "3f5614f5d6c6f72d2e8032079ade0f7855a30ed0ed96489a532a42ad1469170a", "verifierHash": "0ad9ae37c94d99d6875c74ab7d4743226b7178a0d7573a077e3affca9999cd74", "sourceHash": "ba4cc3ceb48655e80f189666f3c3b00a659090d2d8f23692f5fd14f4aa17080f" }
 }

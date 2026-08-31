@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "generatedAt": "2026-08-31T00:00:00.000Z",
+  "readOnlyDiscovery": true,
+  "repositories": [{
+    "role": "primary",
+    "repository": "https://github.com/example/fixture.git",
+    "root": ".",
+    "remote": "https://github.com/example/fixture.git",
+    "head": "fixture",
+    "languages": [{ "name": "javascript", "files": 3 }],
+    "standards": [{ "path": "AGENTS.md", "decision": "approved" }],
+    "architectureSignals": [],
+    "flowLayers": ["HTTP server", "Route", "Observable result"]
+  }],
+  "activeLanguages": ["javascript"],
+  "fallbackStandards": ["javascript"]
+}

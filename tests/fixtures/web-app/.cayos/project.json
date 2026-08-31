@@ -1,6 +1,19 @@
 {
-  "version": 1,
+  "version": 2,
   "project": { "name": "fixture-web" },
+  "repositories": { "related": [] },
+  "standards": {
+    "status": "approved",
+    "sources": [{ "repository": "primary", "path": "AGENTS.md", "sha256": "ddaa0675d2cd955907646fbfdd74c04cbf67f0aa9c2a492dd53d20eda57477f1", "decision": "approved" }],
+    "fallbacks": [".cayos/standards/javascript.md"],
+    "approvedAt": "2026-08-31T00:00:00.000Z"
+  },
+  "architecture": {
+    "status": "approved",
+    "document": ".cayos/architecture.md",
+    "followByDefault": true,
+    "approvedAt": "2026-08-31T00:00:00.000Z"
+  },
   "ticketProvider": { "type": "fake", "binding": "cli", "referencePattern": "^fake:[A-Z0-9-]+$", "readOnly": true },
   "codeHost": { "type": "github", "remote": "origin", "autoMerge": false },
   "verification": { "skill": ".cursor/skills/verify-fixture-web", "sourcePaths": ["app.mjs"] }

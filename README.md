@@ -12,7 +12,7 @@ Add this repository as a Cursor plugin source, then run:
 /cayos-mode ticket <reference>
 ```
 
-Setup asks which skill or MCP reads tickets (ClickUp, Jira, GitHub, Linear, a CLI adapter, or another provider), binds model roles, discovers or creates `verify-<project>`, executes a real verification path, and records hashes in `.cayos/capabilities.lock.json`.
+Setup scans project-approved repositories for existing code standards, asks which documents remain authoritative, proposes stack-specific fallbacks when none exist, maps the observed architecture with Mermaid, and asks whether that pattern should be followed by default. It then binds the ticket provider and model roles, discovers or creates `verify-<project>`, executes a real verification path, and records hashes in `.cayos/capabilities.lock.json`.
 
 ## Guarantees
 
@@ -31,6 +31,9 @@ Setup asks which skill or MCP reads tickets (ClickUp, Jira, GitHub, Linear, a CL
 ```text
 .cayos/project.json              # committed policy
 .cayos/local.json                # local model/provider binding
+.cayos/discovery-report.json     # bounded repository evidence
+.cayos/architecture.md           # approved diagrams and boundaries
+.cayos/standards/                # approved fallback standards
 .cayos/capabilities.lock.json    # proof hashes
 .cursor/skills/verify-<project>/ # project verifier
 ```
