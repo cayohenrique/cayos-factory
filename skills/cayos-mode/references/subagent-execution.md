@@ -10,6 +10,7 @@ Cayos Factory runs in the **current Cursor workspace**. Isolation is Git-shaped 
 - Before `IMPLEMENTING`, work only in the current checkout. Do not create worktrees, branches for implementation, or Task workers.
 - At `IMPLEMENTING`, isolate slices with a **feature branch in this workspace** (`git checkout -b cayos/<run-id>/<slice>`) by default.
 - When parallel slices truly need separate directories, use `git worktree add <path> -b <branch>` on this machine and register the path with `run-state register-worktree`. The orchestrator may `cd` there in shell commands; do not open another Cursor project or agent window.
+- **Implementer/repairer filesystem:** grant full project read/write in every implementation Task prompt. See `cayos-implement` → [filesystem-scope.md](../cayos-implement/references/filesystem-scope.md). Never tell subagents to ask the user for file access.
 
 ## Forbidden
 
