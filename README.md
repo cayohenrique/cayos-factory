@@ -8,12 +8,13 @@ Add this repository as a Cursor plugin source, then run:
 
 ```text
 /setup-cayos-factory
+/cayos-setup-update
 /cayos-doctor
 /cayos-mode ticket <reference>
 /cayos-factory-auto-mode ticket <reference>
 ```
 
-Setup scans project-approved repositories for existing code standards, asks which documents remain authoritative, proposes stack-specific fallbacks when none exist, maps the observed architecture with Mermaid, and asks whether that pattern should be followed by default. It then binds the ticket provider, delivery/work-tier model policy (not per-agent roles), discovers or creates one verifier per repository boundary, executes a real verification path for each configured repository (browser via `chrome-agent-mcp` when that repository's seam is web UI), and records hashes in `.cayos/capabilities.lock.json`.
+Setup scans project-approved repositories for existing code standards, asks which documents remain authoritative, proposes stack-specific fallbacks when none exist, maps the observed architecture with Mermaid, and asks whether that pattern should be followed by default. It then binds the ticket provider, delivery plus six subagent model classes, discovers or creates one verifier per repository boundary, executes a real verification path for each configured repository (browser via `chrome-agent-mcp` when that repository's seam is web UI), and records hashes in `.cayos/capabilities.lock.json`.
 
 ## Guarantees
 
@@ -31,7 +32,7 @@ Setup scans project-approved repositories for existing code standards, asks whic
 
 ```text
 .cayos/project.json              # committed policy
-.cayos/local.json                # local provider + delivery/work-tier model policy
+.cayos/local.json                # local provider + delivery/subagent model policy
 .cayos/discovery-report.json     # bounded repository evidence
 .cayos/architecture.md           # approved diagrams and boundaries
 .cayos/standards/                # approved fallback standards

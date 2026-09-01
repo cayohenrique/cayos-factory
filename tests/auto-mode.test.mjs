@@ -31,17 +31,19 @@ async function autoRun(repo, id = "auto") {
   return id;
 }
 
-test("grill transcript rejects invalid sequences and converge without rounds", async () => {
+test("grill transcript rejects incomplete batches and converge without rounds", async () => {
   const repo = await fixture("cayos-grill-");
   const id = await autoRun(repo);
   const proposal = path.join(repo, ".cayos/runs", id, "proposals", "sharedUnderstanding.md");
+  const questions = path.join(repo, ".cayos/runs", id, "proposals", "sharedUnderstanding-questions-r1.json");
   await mkdir(path.dirname(proposal), { recursive: true });
   await writeFile(proposal, "understanding\n");
+  await writeFile(questions, JSON.stringify({ needsFollowUp: false, questions: [{ id: "1", text: "What seam?" }] }));
   let r = run(grillScript, ["init", "--root", repo, "--gate", "sharedUnderstanding", "--proposal-file", proposal], repo);
   assert.equal(r.status, 0, r.stderr);
-  r = run(grillScript, ["append", "--root", repo, "--gate", "sharedUnderstanding", "--role", "question", "--content", "What seam?"], repo);
+  r = run(grillScript, ["record-questions", "--root", repo, "--gate", "sharedUnderstanding", "--round", "1", "--file", questions], repo);
   assert.equal(r.status, 0, r.stderr);
-  r = run(grillScript, ["append", "--root", repo, "--gate", "sharedUnderstanding", "--role", "question", "--content", "Again?"], repo);
+  r = run(grillScript, ["record-questions", "--root", repo, "--gate", "sharedUnderstanding", "--round", "1", "--file", questions], repo);
   assert.notEqual(r.status, 0);
   const summary = path.join(repo, ".cayos/runs", id, "proposals", "sharedUnderstanding-summary.md");
   await writeFile(summary, "summary\n");
@@ -49,14 +51,50 @@ test("grill transcript rejects invalid sequences and converge without rounds", a
   assert.notEqual(r.status, 0);
 });
 
+test("grill transcript supports two batched rounds", async () => {
+  const repo = await fixture("cayos-grill-rounds-");
+  const id = await autoRun(repo);
+  const proposal = path.join(repo, ".cayos/runs", id, "proposals", "sharedUnderstanding.md");
+  const q1 = path.join(repo, ".cayos/runs", id, "proposals", "sharedUnderstanding-questions-r1.json");
+  const a1 = path.join(repo, ".cayos/runs", id, "proposals", "sharedUnderstanding-answers-r1.json");
+  const q2 = path.join(repo, ".cayos/runs", id, "proposals", "sharedUnderstanding-questions-r2.json");
+  const a2 = path.join(repo, ".cayos/runs", id, "proposals", "sharedUnderstanding-answers-r2.json");
+  const summary = path.join(repo, ".cayos/runs", id, "proposals", "sharedUnderstanding-summary.md");
+  await mkdir(path.dirname(proposal), { recursive: true });
+  await writeFile(proposal, "understanding\n");
+  await writeFile(q1, JSON.stringify({ needsFollowUp: true, questions: [{ id: "1", text: "Seam?" }] }));
+  await writeFile(a1, JSON.stringify({ answers: [{ id: "1", text: "HTTP boundary" }] }));
+  await writeFile(q2, JSON.stringify({ needsFollowUp: false, questions: [{ id: "2", text: "Evidence path?" }] }));
+  await writeFile(a2, JSON.stringify({ answers: [{ id: "2", text: "evidence/setup-response.json" }] }));
+  await writeFile(summary, "summary\n");
+  let r = run(grillScript, ["init", "--root", repo, "--gate", "sharedUnderstanding", "--proposal-file", proposal], repo);
+  assert.equal(r.status, 0, r.stderr);
+  r = run(grillScript, ["record-questions", "--root", repo, "--gate", "sharedUnderstanding", "--round", "1", "--file", q1], repo);
+  assert.equal(r.status, 0, r.stderr);
+  r = run(grillScript, ["record-answers", "--root", repo, "--gate", "sharedUnderstanding", "--round", "1", "--file", a1], repo);
+  assert.equal(r.status, 0, r.stderr);
+  r = run(grillScript, ["record-questions", "--root", repo, "--gate", "sharedUnderstanding", "--round", "2", "--file", q2], repo);
+  assert.equal(r.status, 0, r.stderr);
+  r = run(grillScript, ["record-answers", "--root", repo, "--gate", "sharedUnderstanding", "--round", "2", "--file", a2], repo);
+  assert.equal(r.status, 0, r.stderr);
+  r = run(grillScript, ["converge", "--root", repo, "--gate", "sharedUnderstanding", "--summary-file", summary], repo);
+  assert.equal(r.status, 0, r.stderr);
+  const transcript = JSON.parse(r.stdout);
+  assert.equal(transcript.roundCount, 2);
+});
+
 test("auto-approve requires auto mode and converged grill", async () => {
   const repo = await fixture("cayos-auto-");
   const id = await autoRun(repo);
   const proposal = path.join(repo, ".cayos/runs", id, "proposals", "sharedUnderstanding.md");
   const grill = path.join(repo, ".cayos/runs", id, "grill", "sharedUnderstanding.json");
+  const questions = path.join(repo, ".cayos/runs", id, "proposals", "sharedUnderstanding-questions-r1.json");
+  const answers = path.join(repo, ".cayos/runs", id, "proposals", "sharedUnderstanding-answers-r1.json");
   const summary = path.join(repo, ".cayos/runs", id, "proposals", "sharedUnderstanding-summary.md");
   await mkdir(path.dirname(proposal), { recursive: true });
   await writeFile(proposal, "understanding\n");
+  await writeFile(questions, JSON.stringify({ needsFollowUp: false, questions: [{ id: "1", text: "Seam?" }] }));
+  await writeFile(answers, JSON.stringify({ answers: [{ id: "1", text: "HTTP boundary" }] }));
   await writeFile(summary, "summary\n");
   let r = run(stateScript, ["propose", "--root", repo, "--gate", "sharedUnderstanding", "--proposal-file", proposal], repo);
   assert.equal(r.status, 0, r.stderr);
@@ -64,9 +102,9 @@ test("auto-approve requires auto mode and converged grill", async () => {
   assert.notEqual(r.status, 0);
   r = run(grillScript, ["init", "--root", repo, "--gate", "sharedUnderstanding", "--proposal-file", proposal], repo);
   assert.equal(r.status, 0, r.stderr);
-  r = run(grillScript, ["append", "--root", repo, "--gate", "sharedUnderstanding", "--role", "question", "--content", "Seam?"], repo);
+  r = run(grillScript, ["record-questions", "--root", repo, "--gate", "sharedUnderstanding", "--round", "1", "--file", questions], repo);
   assert.equal(r.status, 0, r.stderr);
-  r = run(grillScript, ["append", "--root", repo, "--gate", "sharedUnderstanding", "--role", "answer", "--content", "HTTP boundary"], repo);
+  r = run(grillScript, ["record-answers", "--root", repo, "--gate", "sharedUnderstanding", "--round", "1", "--file", answers], repo);
   assert.equal(r.status, 0, r.stderr);
   r = run(grillScript, ["converge", "--root", repo, "--gate", "sharedUnderstanding", "--summary-file", summary], repo);
   assert.equal(r.status, 0, r.stderr);

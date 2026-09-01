@@ -13,9 +13,13 @@
   },
   "models": {
     "delivery": "inherit",
-    "work": {
-      "fast": "composer-2.5-fast",
-      "judgment": "claude-opus-5-thinking-high"
+    "subagents": {
+      "grillInterviewer": "composer-2.5-fast",
+      "grillInterviewee": "claude-opus-5-thinking-high",
+      "smallTask": "composer-2.5-fast",
+      "mediumTask": "composer-2.5",
+      "complexTask": "claude-opus-5-thinking-high",
+      "reviewer": "claude-opus-5-thinking-high"
     }
   }
 }

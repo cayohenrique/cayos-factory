@@ -3,9 +3,13 @@
   "browser": { "mcpServer": "chrome-agent-mcp", "debugPort": 9222 },
   "models": {
     "delivery": "inherit",
-    "work": {
-      "fast": "fixture-model",
-      "judgment": "fixture-model"
+    "subagents": {
+      "grillInterviewer": "fixture-model",
+      "grillInterviewee": "fixture-model",
+      "smallTask": "fixture-model",
+      "mediumTask": "fixture-model",
+      "complexTask": "fixture-model",
+      "reviewer": "fixture-model"
     }
   }
 }

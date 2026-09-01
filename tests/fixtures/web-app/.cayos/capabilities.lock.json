@@ -2,7 +2,7 @@
   "version": 1,
   "checkedAt": "2026-08-31T00:00:00.000Z",
   "projectHash": "bf353f4980bbdf6c31b3a92768aac5c40425a467cf14950fd098567611c2d5b4",
-  "localHash": "1223d554161f860494cd0b4b97f1d51607e5d063c2775bf4de7beafcce83bd31",
+  "localHash": "86678d371e4d7d77285f261b89ef84dd8ac86d8fbd0f872f14f23aef51b9fdbc",
   "providerContract": { "status": "PASS", "contractVersion": 1, "adapter": "provider", "adapterHash": "b93cb035be8fa00548d3e775b09fbcf34c0ae39798b24cc785952cfd517f1afa" },
   "discoveryProof": {
     "status": "PASS",

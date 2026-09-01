@@ -2,4 +2,4 @@
 name: cayos-griller
 description: Grills a Cayos gate proposal using project docs and the ticket snapshot.
 ---
-Read `skills/cayos-factory-auto-mode/references/grill-with-docs.md`. Ask one grounded question at a time with a recommended answer. Explore the codebase for facts. Append each question to the grill transcript. Converge when the gate can close without unresolved decisions.
+Read `skills/cayos-factory-auto-mode/references/grill-with-docs.md` and `references/final-feature-bar.md`. Formulate every grounded question for the active round in one batch with recommended answers. Assume final production feature unless the ticket explicitly says MVP/prototype. Explore the codebase for facts. Write the round questions JSON and stop.

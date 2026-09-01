@@ -13,11 +13,13 @@ Run only by explicit `/setup-cayos-factory`.
 3. For each detected TypeScript, JavaScript, PHP, CSS, or Tailwind stack without an approved standard, ask whether to create one from the matching plugin baseline. Copy only approved baselines into `.cayos/standards/`.
 4. Separate declared and observed architecture. Create `.cayos/architecture.md` with a compact container diagram and main application-flow diagram. Show it and ask whether it is correct and should be followed by default. Treat approval as a preferred pattern with explicit deviations, not an eternal prohibition on evolution.
 5. Ask which skill, MCP, app, or CLI adapter reads tasks. Bind only read operations. For CLI use fully anchored `readCommandPatterns`; never a prefix allowlist.
-6. Ask delivery and work-tier model policy per [references/model-policy.md](references/model-policy.md): confirm parent-chat orchestration (`inherit`), bind `work.fast` and `work.judgment`, and only when the team will use auto-mode ask whether grill/respond reuse those tiers or override them. Do not enumerate internal agent roles unless the user requests explicit per-agent overrides.
+6. Ask delivery and subagent model policy per [references/model-policy.md](references/model-policy.md): confirm `delivery: inherit`, then bind all six `models.subagents` classes (grill interviewer/interviewee, small/medium/complex task, reviewer). Offer presets when helpful.
 7. Write committed `.cayos/project.json` from the example and local `.cayos/local.json`. Enforce read-only tracker and `autoMerge: false`.
 8. Reuse structurally valid repository verifiers or call `create-project-verifier` once per repository boundary. For web UI seams, bind `chrome-agent-mcp` from `${CURSOR_PLUGIN_ROOT}/assets/mcp/chrome-agent-mcp.json` and set that repository entry's `seam` to `browser`.
 9. Execute provider contract probes and one real mapped verification path per configured repository. Preserve evidence.
 10. Hash configs, approved standards, architecture, discovery evidence, provider adapter, every verifier tree, declared source paths, and runtime evidence into `.cayos/capabilities.lock.json` with timestamp and contract version.
 11. Run Doctor full. Setup succeeds only at READY; otherwise report the exact missing dependency, approval, or proof.
+
+After setup, use `/cayos-setup-update` to change model tiers without repeating discovery.
 
 Never claim a capability because a name exists. Prove it through a safe read or real verification action.

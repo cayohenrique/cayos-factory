@@ -1,88 +1,91 @@
 # Model policy
 
-Cayos binds models by **delivery surface** and **work tier**, not by internal agent name. This keeps setup aligned with gates (`understand` → `plan` → `implement` → `review` → `verify`) instead of mirroring a per-role matrix like pstack.
+Cayos binds models by **delivery surface** (parent chat) and **six subagent classes**. This matches how work is actually delegated without mirroring a flat per-agent matrix.
 
 ## Questions to ask
 
-Ask in this order. Stop after tier 3 unless the team will use `/cayos-factory-auto-mode`.
+Ask in this order.
 
 ### 1. Delivery surface
 
 > Will `/cayos-mode` run in this Cursor chat?
 
-- **Yes (default):** set `models.delivery` to `inherit`. The parent chat orchestrates; do not bind a separate orchestrator model.
-- **No (rare):** bind an explicit delivery model slug.
+- **Yes (default):** `models.delivery: inherit`
+- **No (rare):** bind an explicit delivery model slug
 
-### 2. Fast execution tier
+### 2. Grill interviewer
 
-> For isolated worktree implementation, localized review, and focused repair loops, which model should Cayos use?
+> Which model should formulate batched grill questions in auto-mode?
 
-Bind as `models.work.fast`. Typical choices: a fast or medium coding model.
+Bind as `models.subagents.grillInterviewer`. Used by `cayos-griller`.
 
-This tier covers implementer, small reviewer, and repairer work without asking three separate questions.
+### 3. Grill interviewee
 
-### 3. Judgment tier
+> Which model should answer the full grill batch from project docs and code?
 
-> For medium/large review, spec alignment, and planning analysis that needs deeper scrutiny, which model?
+Bind as `models.subagents.grillInterviewee`. Used by `cayos-auto-responder`.
 
-Bind as `models.work.judgment`. Typical choices: a higher-reasoning model.
+### 4. Small task
 
-This tier covers deep reviewers and spec review without listing every reviewer agent.
+> Which model for localized implementation slices (single module, narrow seam)?
 
-### 4. Auto-mode grill (only when auto-mode is in scope)
+Bind as `models.subagents.smallTask`.
 
-> Will the team use `/cayos-factory-auto-mode` for pre-implementation grill Q&A?
+### 5. Medium task
 
-If **no**, skip auto-mode bindings.
+> Which model for cross-module slices with moderate coordination?
 
-If **yes**, ask whether grill/respond should **reuse the fast/judgment tiers** (recommended) or override:
+Bind as `models.subagents.mediumTask`.
 
-- `models.autoMode.grill` — fast questioner (`cayos-griller`)
-- `models.autoMode.respond` — grounded responder (`cayos-auto-responder`)
+### 6. Complex task
 
-When omitted, grill inherits `work.fast` and respond inherits `work.judgment`.
+> Which model for migrations, auth, contracts, architecture, or broad refactors?
 
-## Do not ask during default setup
+Bind as `models.subagents.complexTask`.
 
-- Per-agent bindings (`orchestrator`, `smallReviewer`, `deepReviewers`, …) unless the user explicitly requests overrides.
-- `evaluator` — reserved for Cayos Factory plugin adversarial tests, not customer project setup.
+### 7. Reviewer
+
+> Which model for read-only review (small, deep, and spec reviewers)?
+
+Bind as `models.subagents.reviewer`.
 
 ## Presets (optional shortcut)
 
-Offer one preset, then confirm tiers:
-
-| Preset | `delivery` | `work.fast` | `work.judgment` |
-|--------|------------|-------------|-----------------|
-| **balanced** (default) | `inherit` | user picks fast tier | user picks judgment tier |
-| **single-model** | `inherit` | same slug | same slug |
-| **cost-optimized** | `inherit` | cheapest acceptable coding model | premium reasoning model |
+| Preset | interviewer | interviewee | small/medium | complex | reviewer |
+|--------|-------------|-------------|--------------|---------|----------|
+| **balanced** | fast | judgment | fast / fast | judgment | judgment |
+| **single-model** | same | same | same | same | same |
+| **cost-optimized** | cheap fast | premium | cheap fast | premium | premium |
 
 ## Write to `.cayos/local.json`
-
-Preferred shape:
 
 ```json
 {
   "models": {
     "delivery": "inherit",
-    "work": {
-      "fast": "composer-2.5-fast",
-      "judgment": "claude-opus-5-thinking-high"
-    },
-    "autoMode": {
-      "grill": "composer-2.5-fast",
-      "respond": "claude-opus-5-thinking-high"
+    "subagents": {
+      "grillInterviewer": "composer-2.5-fast",
+      "grillInterviewee": "claude-opus-5-thinking-high",
+      "smallTask": "composer-2.5-fast",
+      "mediumTask": "composer-2.5",
+      "complexTask": "claude-opus-5-thinking-high",
+      "reviewer": "claude-opus-5-thinking-high"
     }
   }
 }
 ```
 
-`autoMode` is optional; omit it when grill/respond should inherit from `work`.
+Change bindings later with `/cayos-setup-update`.
 
-## Legacy per-agent overrides
+## Runtime routing
 
-Older projects may still set flat keys (`implementer`, `deepReviewers`, …). Doctor normalizes them into tiers. New setups should prefer tiers; use per-agent keys only when a specific subagent must diverge from its tier.
+- Auto-mode: `taskModelForSubagent("grillInterviewer" | "grillInterviewee")`
+- Implementation/repair: `taskModelForComplexity("small" | "medium" | "large", local)` from the approved ticket slice
+- Review: `taskModelForSubagent("reviewer")`
 
-## Runtime resolution
+Legacy `work.fast` / `work.judgment` and flat agent keys still normalize into these six classes.
 
-Skills and agents resolve bindings through `normalizeModelPolicy()` in `scripts/models.mjs`. Values `inherit`, `inherit-parent`, and `auto` mean omit the Task `model` parameter and run on the parent chat model.
+## Do not ask during default setup
+
+- Per-internal-agent overrides (`implementer`, `deepReviewers`, …) unless explicitly requested
+- `evaluator` — plugin adversarial tests only
