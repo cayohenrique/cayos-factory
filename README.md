@@ -1,6 +1,6 @@
 # Cayos Factory
 
-Cayos Factory is a Cursor plugin that turns a ticket into an approval-gated delivery workflow: resolve, understand, plan, implement in isolated worktrees, review, verify real behavior, and optionally open a PR. Use `/cayos-factory-auto-mode` to automate pre-implementation grill Q&A between a griller subagent and an advanced responder. It never merges, deploys, releases, or mutates the source ticket automatically.
+Cayos Factory is a Cursor plugin that turns a ticket into an approval-gated delivery workflow: resolve, understand, plan, implement on feature branches (or optional git worktrees on disk) in the **current workspace**, review, verify real behavior, and optionally open a PR. Use `/cayos-factory-auto-mode` to automate pre-implementation grill Q&A with local subagents only. It never merges, deploys, releases, or mutates the source ticket automatically.
 
 ## Install
 
@@ -22,7 +22,7 @@ Setup scans project-approved repositories for existing code standards, asks whic
 - Exact user approvals for understanding, test seam, plan, implementation, and PR.
 - Immutable ticket snapshots and append-only run journals.
 - Repository writes only during `IMPLEMENTING`.
-- One registered worktree per implementation slice.
+- One registered branch or git worktree per implementation slice (same Cursor workspace; no project clone).
 - Small/deep/spec review routing and bounded repair loops.
 - Real project verifier with Launch, Doctor, Drive, Evidence, Cleanup, Helpers, and a feature map per configured repository. Web repositories add a Browser section and drive through `chrome-agent-mcp` when their entry uses `seam: "browser"`.
 - Push and PR creation only after verification and explicit approval; automatic merge is forbidden.

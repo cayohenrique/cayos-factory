@@ -23,4 +23,4 @@ Words like "first version", "initial", or "get something working" do **not** by 
 
 ## Orchestrator
 
-Pass this bar to both subagents in every grill Task prompt. Do not instruct "move fast with an MVP" unless the user or ticket did.
+Pass this bar to both subagents in every **local** grill Task prompt. Do not instruct "move fast with an MVP" unless the user or ticket did. Do not clone the workspace or use cloud agents.
