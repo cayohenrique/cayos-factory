@@ -57,3 +57,7 @@ Show the rendered proposal and ask: “Is this description and flow correct? Sho
 ## Persist approval
 
 Write every approved source with repository ID, path, decision, and SHA-256; also record copied standards, architecture document, `followByDefault`, approval timestamp, and evidence hashes in `.cayos/project.json` and `.cayos/capabilities.lock.json`. Doctor must resolve related sources only through user-local bindings and block when an approved document changes, disappears, or no longer matches its proof.
+
+## Multi-repository verification
+
+When more than one repository is approved, read [multi-repository.md](multi-repository.md). Ask which repositories need their own verifier, record each under `verification.repositories`, bind related paths in `.cayos/local.json`, and prove one real feature per configured repository during setup.

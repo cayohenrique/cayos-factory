@@ -3,6 +3,8 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import { access, lstat, readFile, readdir, realpath } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
+import { normalizeVerification, normalizeVerifierProof, validateVerificationConfig } from "./verification.mjs";
+import { validateModelPolicy } from "./models.mjs";
 
 const raw = process.argv.slice(2);
 const rootIndex = raw.indexOf("--root");
@@ -52,9 +54,30 @@ function git(base, args, fallback = "") {
   catch { return fallback; }
 }
 
+async function repositoryRoot(repositoryId, local) {
+  if (repositoryId === "primary") return rootReal;
+  const declared = config.repositories.related.find((repo) => repo.id === repositoryId);
+  const bound = local?.relatedRepositories?.[repositoryId];
+  if (!declared || !bound) throw new Error(`related repository is not locally bound: ${repositoryId}`);
+  const sourceRoot = await realpath(bound);
+  if (await realpath(git(sourceRoot, ["rev-parse", "--show-toplevel"], sourceRoot)) !== sourceRoot) {
+    throw new Error(`related binding is not a Git root: ${repositoryId}`);
+  }
+  if (declared.remote && git(sourceRoot, ["remote", "get-url", declared.remoteName || "origin"]) !== declared.remote) {
+    throw new Error(`related repository remote mismatch: ${repositoryId}`);
+  }
+  return sourceRoot;
+}
+
+const repoPath = async (repositoryId, relative, label, local) => safePath(await repositoryRoot(repositoryId, local), relative, label);
+const repoRead = async (repositoryId, relative, label, local) => readFile(await repoPath(repositoryId, relative, label, local));
+
 let config;
+let verificationEntries = [];
 try {
   config = JSON.parse(await projectRead(".cayos/project.json", "project config"));
+  const verification = validateVerificationConfig(config.verification, config);
+  verificationEntries = verification.entries;
   const sourcesValid = Array.isArray(config.standards?.sources) && config.standards.sources.every((source) => source.repository && source.path && /^[0-9a-f]{64}$/i.test(String(source.sha256 || "")) && source.decision === "approved");
   const valid = config.version === 2
     && Boolean(config.project?.name)
@@ -72,10 +95,8 @@ try {
     && config.ticketProvider?.readOnly === true
     && Boolean(config.codeHost?.type)
     && config.codeHost?.autoMerge === false
-    && Boolean(config.verification?.skill)
-    && Array.isArray(config.verification?.sourcePaths)
-    && config.verification.sourcePaths.length > 0;
-  add("project-config", valid ? "PASS" : "FAIL", valid ? "valid v2 contract with approved standards and architecture" : "missing, unapproved, or unsafe required fields");
+    && verification.valid;
+  add("project-config", valid ? "PASS" : "FAIL", valid ? `valid v2 contract with ${verificationEntries.length} repository verifier(s)` : verification.errors[0] || "missing, unapproved, or unsafe required fields");
 } catch (error) { add("project-config", "FAIL", error.code === "ENOENT" ? "run /setup-cayos-factory" : error.message); }
 
 try {
@@ -94,31 +115,37 @@ if (config?.architecture && config?.standards) {
   } catch (error) { add("project-profile", "FAIL", error.message); }
 }
 
-if (config?.verification?.skill) {
+if (verificationEntries.length) {
   try {
-    const dir = await projectPath(config.verification.skill, "verifier skill");
-    const file = await safePath(dir, "SKILL.md", "verifier entrypoint");
-    const body = await readFile(file, "utf8");
-    const missing = ["Launch", "Doctor", "Drive", "Evidence", "Cleanup", "Helpers"].filter((section) => !new RegExp(`^## ${section}$`, "m").test(body));
-    if (config.verification?.seam === "browser") {
-      if (!new RegExp("^## Browser$", "m").test(body)) missing.push("Browser");
+    const local = full ? JSON.parse(await projectRead(".cayos/local.json", "local config")) : {};
+    const entries = full ? verificationEntries : verificationEntries.filter((entry) => entry.repository === "primary");
+    const failures = [];
+    for (const entry of entries) {
+      const dir = await repoPath(entry.repository, entry.skill, `verifier skill ${entry.repository}`, local);
+      const file = await safePath(dir, "SKILL.md", `verifier entrypoint ${entry.repository}`);
+      const body = await readFile(file, "utf8");
+      const missing = ["Launch", "Doctor", "Drive", "Evidence", "Cleanup", "Helpers"].filter((section) => !new RegExp(`^## ${section}$`, "m").test(body));
+      if (entry.seam === "browser" && !new RegExp("^## Browser$", "m").test(body)) missing.push("Browser");
+      try { await safePath(dir, "features/README.md", `verifier feature map ${entry.repository}`); } catch { missing.push("features/README.md"); }
+      if (missing.length) failures.push(`${entry.repository}: ${missing.join(", ")}`);
     }
-    try { await safePath(dir, "features/README.md", "verifier feature map"); } catch { missing.push("features/README.md"); }
-    add("verifier", missing.length ? "FAIL" : "PASS", missing.length ? `missing: ${missing.join(", ")}` : "structural contract satisfied");
-  } catch (error) { add("verifier", "FAIL", error.code === "ENOENT" ? `missing ${config.verification.skill}` : error.message); }
+    add("verifier", failures.length ? "FAIL" : "PASS", failures.length ? failures.join("; ") : `${entries.length} checked repository verifier(s) satisfy structural contract`);
+  } catch (error) { add("verifier", "FAIL", error.message); }
 }
 
 if (full) {
   let local;
   try {
     local = JSON.parse(await projectRead(".cayos/local.json", "local config"));
-    const roles = ["orchestrator", "implementer", "smallReviewer", "deepReviewers", "repairer", "evaluator"];
-    const missing = roles.filter((role) => !local.models?.[role]);
+    const modelCheck = validateModelPolicy(local);
     const provider = config.ticketProvider.binding === "cli"
       ? local.ticketProvider?.kind === "cli" && Array.isArray(local.ticketProvider?.readCommandPatterns) && local.ticketProvider.readCommandPatterns.length && local.ticketProvider.readCommandPatterns.every((pattern) => String(pattern).startsWith("^") && String(pattern).endsWith("$"))
       : local.ticketProvider?.serverName && Array.isArray(local.ticketProvider?.readTools) && local.ticketProvider.readTools.length;
-    const browser = config.verification?.seam !== "browser" || (local.browser?.mcpServer && Number(local.browser?.debugPort) > 0);
-    add("local-bindings", !missing.length && provider && browser ? "PASS" : "FAIL", !missing.length && provider && browser ? "models/provider bound" : `missing: ${missing.join(", ") || "provider"}${config.verification?.seam === "browser" && !browser ? ", browser" : ""}`);
+    const browser = !verificationEntries.some((entry) => entry.seam === "browser") || (local.browser?.mcpServer && Number(local.browser?.debugPort) > 0);
+    const relatedBound = verificationEntries
+      .filter((entry) => entry.repository !== "primary")
+      .every((entry) => config.repositories.related.some((repo) => repo.id === entry.repository) && local.relatedRepositories?.[entry.repository]);
+    add("local-bindings", modelCheck.valid && provider && browser && relatedBound ? "PASS" : "FAIL", modelCheck.valid && provider && browser && relatedBound ? "model policy, provider, and repository bindings ready" : `missing: ${modelCheck.errors.join(", ") || "model policy"}${verificationEntries.some((entry) => entry.seam === "browser") && !browser ? ", browser" : ""}${!relatedBound ? ", relatedRepositories" : ""}`);
   } catch (error) { add("local-bindings", "FAIL", error.message); }
 
   try {
@@ -142,17 +169,25 @@ if (full) {
     const proof = JSON.parse(await projectRead(".cayos/capabilities.lock.json", "capability lock"));
     const projectHash = hash(await projectRead(".cayos/project.json", "project config"));
     const localHash = hash(await projectRead(".cayos/local.json", "local config"));
-    const verifierHash = await hashTree(await projectPath(config.verification.skill, "verifier skill"));
-    const sourceParts = [];
-    for (const source of config.verification.sourcePaths) sourceParts.push(`${source}:${await hashPath(await projectPath(source, "verification source"))}`);
-    const sourceHash = hash(sourceParts.join("\n"));
+    const proofEntries = normalizeVerifierProof(proof.verifierProof);
+    const computedProofs = [];
+    for (const entry of verificationEntries) {
+      const verifierHash = await hashTree(await repoPath(entry.repository, entry.skill, `verifier skill ${entry.repository}`, local));
+      const sourceParts = [];
+      for (const source of entry.sourcePaths) sourceParts.push(`${source}:${await hashPath(await repoPath(entry.repository, source, `verification source ${entry.repository}`, local))}`);
+      const sourceHash = hash(sourceParts.join("\n"));
+      const proofEntry = proofEntries.find((item) => item.repository === entry.repository);
+      if (!proofEntry) throw new Error(`missing verifier proof for repository ${entry.repository}`);
+      const evidenceHash = hash(await repoRead(entry.repository, proofEntry.evidence, `verification evidence ${entry.repository}`, local));
+      computedProofs.push({ repository: entry.repository, verifierHash, sourceHash, evidenceHash, proofEntry });
+    }
     const adapterHash = await hashPath(await projectPath(proof.providerContract.adapter, "provider adapter"));
-    const evidenceHash = hash(await projectRead(proof.verifierProof.evidence, "verification evidence"));
     const discoveryReportHash = hash(await projectRead(proof.discoveryProof.report, "discovery report"));
     const architectureHash = hash(await projectRead(proof.discoveryProof.architecture, "architecture proof"));
     const standardHashes = [];
     for (const standard of proof.discoveryProof.standards || []) standardHashes.push({ path: standard.path, sha256: hash(await projectRead(standard.path, "standard proof")) });
     const standardsMatch = standardHashes.length === (proof.discoveryProof.standards || []).length && standardHashes.every((item, index) => item.path === proof.discoveryProof.standards[index].path && item.sha256 === proof.discoveryProof.standards[index].sha256);
+    const verifierMatch = computedProofs.every((item) => item.proofEntry.verifierHash === item.verifierHash && item.proofEntry.sourceHash === item.sourceHash && item.proofEntry.evidenceHash === item.evidenceHash);
     const valid = proof.providerContract?.status === "PASS"
       && proof.providerContract?.contractVersion === 1
       && proof.verifierProof?.status === "PASS"
@@ -161,13 +196,12 @@ if (full) {
       && proof.projectHash === projectHash
       && proof.localHash === localHash
       && proof.providerContract.adapterHash === adapterHash
-      && proof.verifierProof.verifierHash === verifierHash
-      && proof.verifierProof.sourceHash === sourceHash
-      && proof.verifierProof.evidenceHash === evidenceHash
+      && verifierMatch
+      && proofEntries.length === verificationEntries.length
       && proof.discoveryProof.reportHash === discoveryReportHash
       && proof.discoveryProof.architectureHash === architectureHash
       && standardsMatch;
-    add("capability-lock", valid ? "PASS" : "FAIL", valid ? "provider, verifier, standards, architecture, and evidence hashes match" : "proof/hash/evidence mismatch");
+    add("capability-lock", valid ? "PASS" : "FAIL", valid ? `provider, ${verificationEntries.length} verifier proof(s), standards, architecture, and evidence hashes match` : "proof/hash/evidence mismatch");
   } catch (error) { add("capability-lock", "FAIL", `proof path missing or unreadable: ${error.code || error.message}`); }
 }
 

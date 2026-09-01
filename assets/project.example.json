@@ -1,7 +1,11 @@
 {
   "version": 2,
   "project": { "name": "my-project" },
-  "repositories": { "related": [] },
+  "repositories": {
+    "related": [
+      { "id": "api", "role": "service", "remote": "git@github.com:org/api.git", "remoteName": "origin" }
+    ]
+  },
   "standards": {
     "status": "approved",
     "sources": [{ "repository": "primary", "path": "AGENTS.md", "sha256": "<SHA-256>", "decision": "approved" }],
@@ -17,9 +21,20 @@
   "ticketProvider": { "type": "clickup", "binding": "mcp", "referencePattern": "^(clickup:)?[A-Za-z0-9_-]+$", "readOnly": true },
   "codeHost": { "type": "github", "remote": "origin", "autoMerge": false },
   "verification": {
-    "skill": ".cursor/skills/verify-my-project",
-    "seam": "http",
-    "sourcePaths": ["src"],
-    "browser": { "mcpServer": "chrome-agent-mcp", "debugPort": 9222 }
+    "repositories": [
+      {
+        "repository": "primary",
+        "skill": ".cursor/skills/verify-web",
+        "seam": "browser",
+        "sourcePaths": ["src"],
+        "browser": { "mcpServer": "chrome-agent-mcp", "debugPort": 9222 }
+      },
+      {
+        "repository": "api",
+        "skill": ".cursor/skills/verify-api",
+        "seam": "http",
+        "sourcePaths": ["src/server.ts"]
+      }
+    ]
   }
 }

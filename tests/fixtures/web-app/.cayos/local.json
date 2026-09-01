@@ -2,11 +2,10 @@
   "ticketProvider": { "kind": "cli", "readCommandPatterns": ["^node provider/get-task\\.mjs fake:[A-Z0-9-]+$"] },
   "browser": { "mcpServer": "chrome-agent-mcp", "debugPort": 9222 },
   "models": {
-    "orchestrator": "fixture-model",
-    "implementer": "fixture-model",
-    "smallReviewer": "fixture-model",
-    "deepReviewers": "fixture-model",
-    "repairer": "fixture-model",
-    "evaluator": "fixture-model"
+    "delivery": "inherit",
+    "work": {
+      "fast": "fixture-model",
+      "judgment": "fixture-model"
+    }
   }
 }

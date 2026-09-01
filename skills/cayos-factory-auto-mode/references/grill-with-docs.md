@@ -1,6 +1,6 @@
 # Grill with docs
 
-Use this protocol for the **griller** subagent (`cayos-griller`).
+Use this protocol for the **griller** subagent (`cayos-griller`) on the fast execution tier (`models.work.fast`) or `models.autoMode.grill` when set.
 
 ## Inputs
 

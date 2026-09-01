@@ -12,10 +12,12 @@ This skill wraps `cayos-mode` and replaces manual approval Q&A before `IMPLEMENT
 
 ## Models
 
-Bind in `.cayos/local.json`:
+Bind in `.cayos/local.json` per [../setup-cayos-factory/references/model-policy.md](../setup-cayos-factory/references/model-policy.md):
 
-- `griller` — fast model for `cayos-griller` (questions, doc citations).
-- `autoResponder` — advanced model for `cayos-auto-responder` (grounded answers).
+- `models.delivery` — usually `inherit` (parent chat runs `/cayos-mode`).
+- `models.work.fast` — implementation, small review, repair, and grill when auto-mode overrides are omitted.
+- `models.work.judgment` — deep/spec review and grounded auto-mode responses when overrides are omitted.
+- Optional `models.autoMode.grill` / `models.autoMode.respond` — only when they must differ from the work tiers.
 
 ## Flow
 
@@ -24,8 +26,8 @@ Bind in `.cayos/local.json`:
 3. For each pre-implementation gate (`sharedUnderstanding`, `testSeam`, `ticketPlan`, `implementation`):
    - produce the gate proposal artifact (`cayos-understand` / `cayos-plan` as appropriate);
    - `run-state propose`;
-   - launch **griller** via Task using `local.models.griller` and [references/grill-with-docs.md](references/grill-with-docs.md);
-   - for each question, launch **responder** via Task using `local.models.autoResponder` and [references/auto-responder.md](references/auto-responder.md);
+   - launch **griller** via Task using `taskModelForRole("griller", local)` from `scripts/models.mjs` (omit Task `model` when the binding is `inherit`) and [references/grill-with-docs.md](references/grill-with-docs.md);
+   - for each question, launch **responder** via Task using `taskModelForRole("autoResponder", local)` and [references/auto-responder.md](references/auto-responder.md);
    - repeat until the griller converges the transcript;
    - close with `run-state auto-approve` per [references/auto-approval.md](references/auto-approval.md).
 4. From `IMPLEMENTING` onward, continue `cayos-mode` unchanged (worktrees, review, verify, PR). Ask the user only for `pullRequest` approval.

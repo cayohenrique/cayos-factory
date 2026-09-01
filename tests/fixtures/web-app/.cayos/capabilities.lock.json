@@ -1,8 +1,8 @@
 {
   "version": 1,
   "checkedAt": "2026-08-31T00:00:00.000Z",
-  "projectHash": "fb95acd294a7a205884c159d2f06e360851b3084f49dfd91c69c7b139c92bd89",
-  "localHash": "edc965f5be4508e4377388e79d135363237d33d88be2ba5a5b0ab15e89a16024",
+  "projectHash": "bf353f4980bbdf6c31b3a92768aac5c40425a467cf14950fd098567611c2d5b4",
+  "localHash": "1223d554161f860494cd0b4b97f1d51607e5d063c2775bf4de7beafcce83bd31",
   "providerContract": { "status": "PASS", "contractVersion": 1, "adapter": "provider", "adapterHash": "b93cb035be8fa00548d3e775b09fbcf34c0ae39798b24cc785952cfd517f1afa" },
   "discoveryProof": {
     "status": "PASS",
@@ -12,5 +12,16 @@
     "architectureHash": "71f0cac5130e061b2a53656b2d8ab4c84ee26bc5d657514ecb4aff1d94aeab1a",
     "standards": [{ "path": ".cayos/standards/javascript.md", "sha256": "b4d9ac0e5416fb13008d7eac8058e293f9043d67d2ebdc1dce68cfc70ba6d8c9" }]
   },
-  "verifierProof": { "status": "PASS", "evidence": "evidence/setup-response.json", "evidenceHash": "3f5614f5d6c6f72d2e8032079ade0f7855a30ed0ed96489a532a42ad1469170a", "verifierHash": "79adb473041f2c969ec7378eb8d8ba65b7377d098b6cbd39d437aaab85258a64", "sourceHash": "ba4cc3ceb48655e80f189666f3c3b00a659090d2d8f23692f5fd14f4aa17080f" }
+  "verifierProof": {
+    "status": "PASS",
+    "repositories": [
+      {
+        "repository": "primary",
+        "evidence": "evidence/setup-response.json",
+        "evidenceHash": "3f5614f5d6c6f72d2e8032079ade0f7855a30ed0ed96489a532a42ad1469170a",
+        "verifierHash": "79adb473041f2c969ec7378eb8d8ba65b7377d098b6cbd39d437aaab85258a64",
+        "sourceHash": "ba4cc3ceb48655e80f189666f3c3b00a659090d2d8f23692f5fd14f4aa17080f"
+      }
+    ]
+  }
 }

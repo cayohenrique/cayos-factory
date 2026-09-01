@@ -5,5 +5,8 @@
   "description": "Approval-gated software factory for delivering tickets safely in Cursor.",
   "author": { "name": "Cayo Henrique" },
   "license": "MIT",
-  "keywords": ["software-factory", "tickets", "verification", "worktrees"]
+  "keywords": ["software-factory", "tickets", "verification", "worktrees"],
+  "skills": "./skills/",
+  "agents": "./agents/",
+  "hooks": "./hooks/hooks.json"
 }

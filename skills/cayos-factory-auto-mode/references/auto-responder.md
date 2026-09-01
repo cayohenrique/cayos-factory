@@ -1,6 +1,6 @@
 # Auto responder
 
-Use this protocol for the **responder** subagent (`cayos-auto-responder`) on the model bound as `local.models.autoResponder`.
+Use this protocol for the **responder** subagent (`cayos-auto-responder`) on the judgment tier (`models.work.judgment`) or `models.autoMode.respond` when set.
 
 ## Inputs
 

@@ -1,0 +1,21 @@
+{
+  "ticketProvider": {
+    "kind": "mcp",
+    "serverName": "plugin-clickup-clickup",
+    "readTools": ["clickup_get_task"]
+  },
+  "browser": {
+    "mcpServer": "chrome-agent-mcp",
+    "debugPort": 9222
+  },
+  "relatedRepositories": {
+    "api": "/absolute/path/to/api"
+  },
+  "models": {
+    "delivery": "inherit",
+    "work": {
+      "fast": "composer-2.5-fast",
+      "judgment": "claude-opus-5-thinking-high"
+    }
+  }
+}
