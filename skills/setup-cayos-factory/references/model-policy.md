@@ -1,61 +1,40 @@
 # Model policy
 
-Cayos binds models by **delivery surface** (parent chat) and **six subagent classes**. This matches how work is actually delegated without mirroring a flat per-agent matrix.
+Cayos binds models by **delivery surface** (parent chat) and **six subagent classes**. User-facing prompts and option order live in [setup-questions.md](setup-questions.md) Phase 5.
 
-## Questions to ask
+## Presets
 
-Ask in this order.
+Apply after the user chooses a preset in Phase 5b. Ask for slug(s) only when the preset needs them (e.g. **Single model** → one slug; **Balanced** → optional fast + judgment slugs with defaults below).
 
-### 1. Delivery surface
+| Preset | `grillInterviewer` | `grillInterviewee` | `smallTask` | `mediumTask` | `complexTask` | `reviewer` |
+|--------|-------------------|-------------------|-------------|--------------|---------------|------------|
+| **balanced** (default) | fast tier | judgment tier | fast | fast | judgment | judgment |
+| **single-model** | same slug | same | same | same | same | same |
+| **cost-optimized** | cheap fast | premium judgment | cheap fast | cheap fast | premium | premium |
 
-> Will `/cayos-mode` run in this Cursor chat?
+**Suggested default slugs** when the user accepts Balanced without naming models:
 
-- **Yes (default):** `models.delivery: inherit`
-- **No (rare):** bind an explicit delivery model slug
+| Tier | Example slug |
+|------|----------------|
+| fast | `composer-2.5-fast` |
+| judgment | `claude-opus-5-thinking-high` |
 
-### 2. Grill interviewer
+**Single model:** one slug for all six keys.
 
-> Which model should formulate batched grill questions in auto-mode?
+**Cost-optimized:** e.g. fast = `composer-2.5-fast`, premium = `claude-opus-5-thinking-high`.
 
-Bind as `models.subagents.grillInterviewer`. Used by `cayos-griller`.
+## Customize (six roles)
 
-### 3. Grill interviewee
+Only when Phase 5b = **Customize**. Plain-language table in [setup-questions.md](setup-questions.md#5c-customize--six-roles-only-when-5b--customize).
 
-> Which model should answer the full grill batch from project docs and code?
-
-Bind as `models.subagents.grillInterviewee`. Used by `cayos-auto-responder`.
-
-### 4. Small task
-
-> Which model for localized implementation slices (single module, narrow seam)?
-
-Bind as `models.subagents.smallTask`.
-
-### 5. Medium task
-
-> Which model for cross-module slices with moderate coordination?
-
-Bind as `models.subagents.mediumTask`.
-
-### 6. Complex task
-
-> Which model for migrations, auth, contracts, architecture, or broad refactors?
-
-Bind as `models.subagents.complexTask`.
-
-### 7. Reviewer
-
-> Which model for read-only review (small, deep, and spec reviewers)?
-
-Bind as `models.subagents.reviewer`.
-
-## Presets (optional shortcut)
-
-| Preset | interviewer | interviewee | small/medium | complex | reviewer |
-|--------|-------------|-------------|--------------|---------|----------|
-| **balanced** | fast | judgment | fast / fast | judgment | judgment |
-| **single-model** | same | same | same | same | same |
-| **cost-optimized** | cheap fast | premium | cheap fast | premium | premium |
+| Config key | Used by |
+|------------|---------|
+| `grillInterviewer` | `cayos-griller` — auto-mode question batches |
+| `grillInterviewee` | `cayos-auto-responder` — auto-mode answers from docs/code |
+| `smallTask` | localized implementation slices |
+| `mediumTask` | cross-module slices |
+| `complexTask` | migrations, auth, contracts, architecture |
+| `reviewer` | read-only review (small, deep, spec) |
 
 ## Write to `.cayos/local.json`
 

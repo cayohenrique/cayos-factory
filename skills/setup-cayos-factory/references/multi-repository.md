@@ -1,17 +1,10 @@
 # Multi-repository verification
 
-Use this reference when setup discovers more than one approved Git repository or when tickets routinely touch multiple runtimes.
+Use when Phase 1b = **Several repositories** or tickets routinely touch multiple runtimes. User-facing prompts: [setup-questions.md](setup-questions.md) Phase 1c–1d and Phase 6.
 
-## Setup questions
+## Record in config
 
-Ask explicitly:
-
-1. Which repositories are in scope besides the primary Git root?
-2. For each repository, what is its role (API, web UI, worker, shared library, infrastructure)?
-3. Does each repository expose its own real user/runtime boundary that needs a separate verifier?
-4. Which repository owns `.cayos/project.json` and the capability lock?
-
-Record approved related repositories in `.cayos/project.json`:
+Approved related repositories in committed `.cayos/project.json`:
 
 ```json
 "repositories": {
@@ -21,7 +14,7 @@ Record approved related repositories in `.cayos/project.json`:
 }
 ```
 
-Bind machine paths only in `.cayos/local.json`:
+Machine paths only in `.cayos/local.json`:
 
 ```json
 "relatedRepositories": {

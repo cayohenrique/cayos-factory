@@ -8,17 +8,15 @@ disable-model-invocation: true
 
 Run only by explicit `/setup-cayos-factory`.
 
-1. Confirm the primary Git root. Ask whether the delivery spans multiple repositories, their roles, and which repo owns `.cayos`. Scan only explicitly approved related repositories. Read [references/project-discovery.md](references/project-discovery.md) and [references/multi-repository.md](references/multi-repository.md).
-2. Show candidate code standards/pattern documents with evidence and ask which remain authoritative. Never decide from filenames alone.
-3. For each detected TypeScript, JavaScript, PHP, CSS, or Tailwind stack without an approved standard, ask whether to create one from the matching plugin baseline. Copy only approved baselines into `.cayos/standards/`.
-4. Separate declared and observed architecture. Create `.cayos/architecture.md` with a compact container diagram and main application-flow diagram. Show it and ask whether it is correct and should be followed by default. Treat approval as a preferred pattern with explicit deviations, not an eternal prohibition on evolution.
-5. Ask which skill, MCP, app, or CLI adapter reads tasks. Bind only read operations. For CLI use fully anchored `readCommandPatterns`; never a prefix allowlist.
-6. Ask delivery and subagent model policy per [references/model-policy.md](references/model-policy.md): confirm `delivery: inherit`, then bind all six `models.subagents` classes (grill interviewer/interviewee, small/medium/complex task, reviewer). Offer presets when helpful.
-7. Write committed `.cayos/project.json` from the example and local `.cayos/local.json`. Enforce read-only tracker and `autoMerge: false`.
-8. Reuse structurally valid repository verifiers or call `create-project-verifier` once per repository boundary. For web UI seams, bind `chrome-agent-mcp` from `${CURSOR_PLUGIN_ROOT}/assets/mcp/chrome-agent-mcp.json` and set that repository entry's `seam` to `browser`.
-9. Execute provider contract probes and one real mapped verification path per configured repository. Preserve evidence.
-10. Hash configs, approved standards, architecture, discovery evidence, provider adapter, every verifier tree, declared source paths, and runtime evidence into `.cayos/capabilities.lock.json` with timestamp and contract version.
-11. Run Doctor full. Setup succeeds only at READY; otherwise report the exact missing dependency, approval, or proof.
+Follow [references/setup-questions.md](references/setup-questions.md) for every user-facing prompt, option list, and phase order. Apply the **humanizer** skill when presenting questions: short sentences, plain words, no jargon. Use the exact meaning from setup-questions; do not add corporate or technical filler.
+
+1. **Phase 1 — Scope:** primary Git root, single vs multiple repositories, related paths/roles/verifiers, `.cayos` owner. See [references/multi-repository.md](references/multi-repository.md).
+2. **Phase 2 — Standards:** discovery evidence, per-document Follow/Ignore/Replace, missing baselines. See [references/project-discovery.md](references/project-discovery.md).
+3. **Phase 3 — Architecture:** declared vs observed model, diagrams, accuracy then default-for-new-work (two separate questions).
+4. **Phase 4 — Ticket provider:** closed-menu read-only binding; confirm discovered CLI when present.
+5. **Phase 5 — Models:** delivery inherit (default), preset first (Balanced / Single / Cost-optimized), customize only on request. See [references/model-policy.md](references/model-policy.md).
+6. **Phase 6 — Verification:** proof type and example path per repository; reuse or call `create-project-verifier`. For web UI, bind `chrome-agent-mcp` from `${CURSOR_PLUGIN_ROOT}/assets/mcp/chrome-agent-mcp.json` and set `seam` to `browser`.
+7. **Phase 7 — Confirm:** summarize choices, write `.cayos/project.json` and `.cayos/local.json` (`autoMerge: false`), run provider probes and one real verification path per repository, hash into `.cayos/capabilities.lock.json`, run Doctor full. Setup succeeds only at READY.
 
 After setup, use `/cayos-setup-update` to change model tiers without repeating discovery.
 
