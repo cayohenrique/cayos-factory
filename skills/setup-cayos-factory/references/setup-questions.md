@@ -31,23 +31,30 @@ Record each answer before the next phase. Technical binding details live in the 
 
 > Do you ship from one repo, or from a few repos that work together?
 >
-> - One repo (usual case). Go to Phase 2.
-> - A few repos. I'll list them next.
+> - **One repo** (usual case). Go to Phase 2.
+> - **A few repos.** I'll list them next.
+> - **All git repos in this folder.** Cayos scans `<folder>` for Git checkouts, keeps one per remote (skips duplicate worktrees such as `*-brain-*`), then asks you to confirm.
 
-**1c. Other repos** (only if they picked "a few repos")
+**1c. Other repos** (if they picked "a few repos" or "all git repos in this folder")
 
-Show a short table. Ask them to fix anything wrong:
+For **all git repos in this folder**, run discovery first:
 
-| Name | Folder on this machine | What is it? | Need its own test? |
-|------|------------------------|-------------|-------------------|
-| api | `/path/to/api` | Backend API | Yes / No |
-| web | `/path/to/web` | Website | Yes / No |
+```text
+node ${CURSOR_PLUGIN_ROOT}/scripts/discover-project.mjs --scan-folder <folder> [--primary <repo-path>] [--output <report.json>]
+```
+
+Show a short table. Include any skipped duplicate checkouts from `folderScan.skippedDuplicates`. Ask them to fix anything wrong:
+
+| Name | Folder on this machine | Remote | What is it? | Need its own test? |
+|------|------------------------|--------|-------------|-------------------|
+| api | `/path/to/api` | `git@github.com:org/api.git` | Backend API | Yes / No |
+| web | `/path/to/web` | `git@github.com:org/web.git` | Website | Yes / No |
 
 What it is: API, website, worker, shared library, infra, or other.
 
-> Are these paths right? Does each repo need its own end-to-end test?
+> Are these paths right? Uncheck any repo to exclude. Does each included repo need its own end-to-end test?
 
-Only list repos they name. Do not scan the whole disk or org.
+Only list repos they name or approve from the scan. Do not scan the whole disk or org. When they exclude a scanned repo, remove it before Phase 2.
 
 **1d. Where config lives**
 
@@ -58,7 +65,7 @@ Only list repos they name. Do not scan the whole disk or org.
 
 ### Agent notes
 
-Record related repos in `.cayos/project.json`. Put local paths in `.cayos/local.json` → `relatedRepositories`. See [multi-repository.md](multi-repository.md).
+When the user picks **all git repos in this folder**, use `--scan-folder` on the main project folder from Phase 1a. Prefer `--primary` when they name the main repo; otherwise the first kept checkout becomes primary. Record related repos in `.cayos/project.json`. Put local paths in `.cayos/local.json` → `relatedRepositories` using each report entry's `localPath`. See [multi-repository.md](multi-repository.md).
 
 ---
 

@@ -2,14 +2,16 @@
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { readFile, readdir, stat } from "node:fs/promises";
+import { readFile, readdir, stat, realpath } from "node:fs/promises";
 import { writeJson } from "./lib.mjs";
 
 const raw = process.argv.slice(2);
 const values = (name) => raw.flatMap((item, index) => item === `--${name}` && raw[index + 1] ? [raw[index + 1]] : []);
 const value = (name) => values(name).at(-1) || "";
 const primary = path.resolve(value("root") || process.cwd());
-const requested = [primary, ...values("related").map((item) => path.resolve(item))];
+const scanFolderArg = value("scan-folder");
+const primaryArg = value("primary") ? path.resolve(value("primary")) : "";
+const scanSkipNames = new Set(["node_modules", "vendor", "dist", "build", ".next", ".nuxt", "coverage", "docs", ".tmp", ".cursor"]);
 const output = value("output") ? path.resolve(value("output")) : "";
 const ignored = new Set([".git", "node_modules", "vendor", "dist", "build", ".next", ".nuxt", "coverage", ".cayos/runs"]);
 const documentationNames = /^(?:agents|context|readme|contributing|architecture|standards?|styleguide|code[-_ ]?style|patterns?|decisions?|adr(?:-\d+)?)\.(?:md|mdx|txt)$/i;
@@ -24,6 +26,68 @@ const hash = (body) => createHash("sha256").update(body).digest("hex");
 function git(root, args, fallback = "") {
   try { return execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); }
   catch { return fallback; }
+}
+
+async function isGitRoot(candidate) {
+  const resolved = path.resolve(candidate);
+  const top = git(resolved, ["rev-parse", "--show-toplevel"], "");
+  if (!top) return false;
+  const [resolvedReal, topReal] = await Promise.all([realpath(resolved), realpath(top)]);
+  return resolvedReal === topReal;
+}
+
+function preferRepository(paths) {
+  const scored = paths.map((item) => ({
+    path: item,
+    name: path.basename(item),
+    score: (/-brain-/i.test(path.basename(item)) ? 100 : 0)
+      + (/-fix-/i.test(path.basename(item)) ? 50 : 0)
+      + (/-promote$/i.test(path.basename(item)) ? 40 : 0)
+      + path.basename(item).length,
+  }));
+  scored.sort((left, right) => left.score - right.score || left.name.localeCompare(right.name));
+  return scored[0].path;
+}
+
+async function scanFolderRepositories(folder) {
+  const folderReal = path.resolve(folder);
+  if (!(await stat(folderReal)).isDirectory()) throw new Error(`scan folder is not a directory: ${folderReal}`);
+  const byRemote = new Map();
+  for (const entry of await readdir(folderReal, { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name.startsWith(".") || scanSkipNames.has(entry.name)) continue;
+    const child = path.join(folderReal, entry.name);
+    if (!(await isGitRoot(child))) continue;
+    const remote = git(child, ["remote", "get-url", "origin"], "") || child;
+    const list = byRemote.get(remote) || [];
+    list.push(path.resolve(child));
+    byRemote.set(remote, list);
+  }
+  const skippedDuplicates = [];
+  const repositories = [];
+  for (const [remote, paths] of byRemote.entries()) {
+    const kept = preferRepository(paths);
+    repositories.push(kept);
+    if (paths.length > 1) {
+      skippedDuplicates.push({
+        remote,
+        kept: path.basename(kept),
+        skipped: paths.filter((item) => item !== kept).map((item) => path.basename(item)),
+      });
+    }
+  }
+  repositories.sort((left, right) => left.localeCompare(right));
+  return { folder: folderReal, repositories, skippedDuplicates };
+}
+
+function orderRepositories(repositories, preferredPrimary = "") {
+  const unique = [...new Set(repositories.map((item) => path.resolve(item)))];
+  if (!unique.length) throw new Error("no Git repositories found");
+  const primaryPath = preferredPrimary ? path.resolve(preferredPrimary) : "";
+  if (primaryPath) {
+    if (!unique.includes(primaryPath)) throw new Error(`primary repository is not in scope: ${primaryPath}`);
+    return [primaryPath, ...unique.filter((item) => item !== primaryPath)];
+  }
+  return unique;
 }
 
 async function walk(root, current = root, files = []) {
@@ -92,13 +156,23 @@ async function inspectRepository(requestedRoot, role) {
 
   const remote = git(root, ["remote", "get-url", "origin"], null);
   return {
-    role, repository: remote || path.basename(root), root: role === "primary" ? "." : path.basename(root), remote,
+    role, repository: remote || path.basename(root), localPath: root, root: role === "primary" ? "." : path.basename(root), remote,
     head: git(root, ["rev-parse", "HEAD"], "unborn"),
     filesScanned: files.length, truncated: files.length >= 50000,
     languages: Object.entries(languageCounts).sort((a, b) => b[1] - a[1]).map(([name, files]) => ({ name, files })),
     frameworks, configs: [...new Set(configs)].sort(), standards: standards.sort((a, b) => a.path.localeCompare(b.path)),
     architectureSignals, flowLayers
   };
+}
+
+let requested;
+let folderScan = null;
+if (scanFolderArg) {
+  folderScan = await scanFolderRepositories(scanFolderArg);
+  const preferredPrimary = primaryArg || (await isGitRoot(primary) ? primary : "");
+  requested = orderRepositories(folderScan.repositories, preferredPrimary);
+} else {
+  requested = orderRepositories([primary, ...values("related").map((item) => path.resolve(item))], primaryArg || primary);
 }
 
 const unique = [...new Set(requested)];
@@ -110,9 +184,11 @@ if (repositories.some((repo) => repo.frameworks.includes("tailwindcss") || repo.
 const report = {
   version: 1, generatedAt: new Date().toISOString(), readOnlyDiscovery: true,
   repositories, activeLanguages, fallbackStandards: [...new Set(fallbackStandards)],
+  folderScan,
   approvalRequired: {
     standards: "Confirm which discovered documents are authoritative and whether missing stack standards may be created from plugin baselines.",
-    architecture: "Confirm the corrected diagram and whether observed architecture should be followed by default."
+    architecture: "Confirm the corrected diagram and whether observed architecture should be followed by default.",
+    repositories: folderScan ? "Confirm scanned repositories, excluded checkouts, and which repo owns .cayos." : undefined,
   }
 };
 if (output) await writeJson(output, report);

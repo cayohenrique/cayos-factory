@@ -4,12 +4,13 @@ Use during setup **after** Phase 1 scope is confirmed and **before** binding the
 
 ## Scope repositories deliberately
 
-Scan the current Git root, detected workspaces inside it, and only related repositories the user explicitly names or approves in Phase 1. Do not enumerate every repository available through GitHub, an organization, or a local parent folder. Record each repository, role, remote, and HEAD used by the discovery report. Put machine-specific related-repository paths only in `.cayos/local.json` under `relatedRepositories`; committed project policy identifies them by stable ID and remote.
+Scan the current Git root, detected workspaces inside it, and only related repositories the user explicitly names or approves in Phase 1. When they pick **all git repos in this folder**, scan immediate child checkouts with `--scan-folder` (one kept repo per `origin` remote; duplicate worktrees are collapsed). Do not enumerate every repository available through GitHub, an organization, or a local parent folder outside the approved scan. Record each repository, role, remote, `localPath`, and HEAD used by the discovery report. Put machine-specific related-repository paths only in `.cayos/local.json` under `relatedRepositories`; committed project policy identifies them by stable ID and remote.
 
 Run:
 
 ```text
 node ${CURSOR_PLUGIN_ROOT}/scripts/discover-project.mjs --root <repo> [--related <repo>] [--output <report.json>]
+node ${CURSOR_PLUGIN_ROOT}/scripts/discover-project.mjs --scan-folder <folder> [--primary <repo-path>] [--output <report.json>]
 ```
 
 The script is read-only except for the optional report output. Treat its architecture classification as evidence, not truth.

@@ -1,6 +1,8 @@
 # Multi-repository verification
 
-Use when Phase 1b = **Several repositories** or tickets routinely touch multiple runtimes. User-facing prompts: [setup-questions.md](setup-questions.md) Phase 1c–1d and Phase 6.
+Use when Phase 1b = **Several repositories** or **All git repos in this folder**, or tickets routinely touch multiple runtimes. User-facing prompts: [setup-questions.md](setup-questions.md) Phase 1c–1d and Phase 6.
+
+For folder scans, discovery keeps one checkout per `origin` remote and reports skipped duplicates in `folderScan.skippedDuplicates`. The user confirms the kept list in Phase 1c before standards discovery.
 
 ## Record in config
 

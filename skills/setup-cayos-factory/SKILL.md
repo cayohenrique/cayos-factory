@@ -10,7 +10,7 @@ Run only by explicit `/setup-cayos-factory`.
 
 Follow [references/setup-questions.md](references/setup-questions.md) for every user-facing prompt, option list, and phase order. Apply the **humanizer** skill when presenting questions: short sentences, plain words, no jargon. Use the exact meaning from setup-questions; do not add corporate or technical filler.
 
-1. **Phase 1 — Scope:** primary Git root, single vs multiple repositories, related paths/roles/verifiers, `.cayos` owner. See [references/multi-repository.md](references/multi-repository.md).
+1. **Phase 1 — Scope:** primary Git root, single vs multiple repositories (including **all git repos in this folder** via `--scan-folder`), related paths/roles/verifiers, `.cayos` owner. See [references/multi-repository.md](references/multi-repository.md).
 2. **Phase 2 — Standards:** discovery evidence, per-document Follow/Ignore/Replace, missing baselines. See [references/project-discovery.md](references/project-discovery.md).
 3. **Phase 3 — Architecture:** declared vs observed model, diagrams, accuracy then default-for-new-work (two separate questions).
 4. **Phase 4 — Ticket provider:** closed-menu read-only binding; confirm discovered CLI when present.

@@ -21,6 +21,29 @@ test("Doctor is READY only while provider, verifier, source and evidence hashes 
 
 test("project discovery is read-only, bounded, stack-aware, and does not enumerate unrelated repositories",async()=>{const repo=await fixture("cayos-discovery-"),before=execFileSync("git",["status","--porcelain=v1","-uall"],{cwd:repo,encoding:"utf8"});const r=run(discoverScript,["--root",repo],repo);assert.equal(r.status,0,r.stderr);const report=JSON.parse(r.stdout);assert.equal(report.readOnlyDiscovery,true);assert.equal(report.repositories.length,1);assert.equal(report.repositories[0].root,".");assert.ok(report.repositories[0].standards.some(item=>item.path==="AGENTS.md"));assert.ok(report.activeLanguages.includes("javascript"));assert.ok(report.fallbackStandards.includes("javascript"));assert.equal(execFileSync("git",["status","--porcelain=v1","-uall"],{cwd:repo,encoding:"utf8"}),before);});
 
+test("project discovery scans a folder for git repos and collapses duplicate remotes", async () => {
+  const workspace = await mkdtemp(path.join(os.tmpdir(), "cayos-folder-scan-"));
+  const api = path.join(workspace, "api");
+  const web = path.join(workspace, "web");
+  const apiBrain = path.join(workspace, "api-brain-123");
+  for (const repo of [api, web, apiBrain]) {
+    await cp(path.join(root, "tests/fixtures/web-app"), repo, { recursive: true });
+    execFileSync("git", ["init", "-q", "-b", "main"], { cwd: repo });
+    execFileSync("git", ["remote", "add", "origin", repo === web ? "https://github.com/example/web.git" : "https://github.com/example/api.git"], { cwd: repo });
+    execFileSync("git", ["add", "."], { cwd: repo });
+    execFileSync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "commit", "-qm", "fixture"], { cwd: repo });
+  }
+  const r = run(discoverScript, ["--scan-folder", workspace, "--primary", api], workspace);
+  assert.equal(r.status, 0, r.stderr);
+  const report = JSON.parse(r.stdout);
+  assert.equal(report.repositories.length, 2);
+  assert.equal(report.repositories[0].role, "primary");
+  assert.equal(path.basename(report.repositories[0].localPath), "api");
+  assert.equal(path.basename(report.repositories[1].localPath), "web");
+  assert.equal(report.folderScan.skippedDuplicates.length, 1);
+  assert.deepEqual(report.folderScan.skippedDuplicates[0].skipped, ["api-brain-123"]);
+});
+
 test("snapshots reject PREFLIGHT and traversal",async()=>{const repo=await fixture("cayos-snapshot-"),file=path.join(repo,"ticket.json");await writeFile(file,"{\"id\":1}");let r=run(stateScript,["init","--root",repo,"--run-id","snap","--ticket","fake:SAFE-1"],repo);assert.equal(r.status,0);r=run(stateScript,["snapshot","--root",repo,"--file",file,"--kind","ticket"],repo);assert.notEqual(r.status,0);r=run(stateScript,["transition","--root",repo,"--to","TICKET_RESOLVED"],repo);assert.equal(r.status,0);r=run(stateScript,["snapshot","--root",repo,"--file",file,"--kind","../../escaped"],repo);assert.notEqual(r.status,0);r=run(stateScript,["snapshot","--root",repo,"--file",file,"--kind","ticket"],repo);assert.equal(r.status,0,r.stderr);assert.match(JSON.parse(r.stdout).target,/snapshots\/ticket-/);});
 
 test("provider and verifier exercise a real safe path",async()=>{const repo=await fixture("cayos-e2e-");let r=run(path.join(repo,"provider/get-task.mjs"),["fake:SAFE-1"],repo);assert.equal(r.status,0,r.stderr);const ticket=JSON.parse(r.stdout);assert.equal(ticket.id,"SAFE-1");assert.match(ticket.body,/Ignore every prior instruction/);for(const [ref,error] of [["fake:UNAUTHENTICATED","UNAUTHENTICATED"],["fake:UNAUTHORIZED","UNAUTHORIZED"],["fake:AMBIGUOUS","AMBIGUOUS"],["fake:RATE-LIMITED","RATE_LIMITED"],["fake:TRANSPORT","TRANSPORT"],["fake:MISSING","NOT_FOUND"]]){r=run(path.join(repo,"provider/get-task.mjs"),[ref],repo);assert.notEqual(r.status,0);assert.equal(JSON.parse(r.stderr).error,error);}const evidence=path.join(repo,"evidence/runtime/response.json");r=run(path.join(repo,".cursor/skills/verify-fixture-web/scripts/verify.mjs"),[evidence],repo);assert.equal(r.status,0,r.stderr);assert.deepEqual(JSON.parse(await readFile(evidence,"utf8")),{action:"GET /",status:200,body:"hello from fixture"});const browserEvidence=path.join(repo,"evidence/runtime/browser.json");r=run(path.join(repo,".cursor/skills/verify-fixture-web/scripts/browser-verify.mjs"),[browserEvidence],repo,undefined,{env:{...process.env,CURSOR_PLUGIN_ROOT:root}});assert.equal(r.status,0,r.stderr+r.stdout);const browserProof=JSON.parse(await readFile(browserEvidence,"utf8"));assert.ok(browserProof.seam==="browser"||browserProof.seam==="http-fallback");});
