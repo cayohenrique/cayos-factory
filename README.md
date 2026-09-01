@@ -1,6 +1,6 @@
 # Cayos Factory
 
-Cayos Factory is a Cursor plugin that turns a ticket into an approval-gated delivery workflow: resolve, understand, plan, implement in isolated worktrees, review, verify real behavior, and optionally open a PR. It never merges, deploys, releases, or mutates the source ticket automatically.
+Cayos Factory is a Cursor plugin that turns a ticket into an approval-gated delivery workflow: resolve, understand, plan, implement in isolated worktrees, review, verify real behavior, and optionally open a PR. Use `/cayos-factory-auto-mode` to automate pre-implementation grill Q&A between a griller subagent and an advanced responder. It never merges, deploys, releases, or mutates the source ticket automatically.
 
 ## Install
 
@@ -10,6 +10,7 @@ Add this repository as a Cursor plugin source, then run:
 /setup-cayos-factory
 /cayos-doctor
 /cayos-mode ticket <reference>
+/cayos-factory-auto-mode ticket <reference>
 ```
 
 Setup scans project-approved repositories for existing code standards, asks which documents remain authoritative, proposes stack-specific fallbacks when none exist, maps the observed architecture with Mermaid, and asks whether that pattern should be followed by default. It then binds the ticket provider and model roles, discovers or creates `verify-<project>`, executes a real verification path (browser via `chrome-agent-mcp` when the seam is web UI), and records hashes in `.cayos/capabilities.lock.json`.
@@ -40,4 +41,4 @@ Setup scans project-approved repositories for existing code standards, asks whic
 
 Run `npm run verify` to validate the plugin, execute adversarial fixtures, and audit skill token budgets.
 
-See [`contracts/`](contracts/) for provider, verifier, and worker-handoff contracts.
+See [`contracts/`](contracts/) for provider, verifier, auto-mode, and worker-handoff contracts.
