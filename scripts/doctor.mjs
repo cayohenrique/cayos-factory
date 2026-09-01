@@ -100,6 +100,9 @@ if (config?.verification?.skill) {
     const file = await safePath(dir, "SKILL.md", "verifier entrypoint");
     const body = await readFile(file, "utf8");
     const missing = ["Launch", "Doctor", "Drive", "Evidence", "Cleanup", "Helpers"].filter((section) => !new RegExp(`^## ${section}$`, "m").test(body));
+    if (config.verification?.seam === "browser") {
+      if (!new RegExp("^## Browser$", "m").test(body)) missing.push("Browser");
+    }
     try { await safePath(dir, "features/README.md", "verifier feature map"); } catch { missing.push("features/README.md"); }
     add("verifier", missing.length ? "FAIL" : "PASS", missing.length ? `missing: ${missing.join(", ")}` : "structural contract satisfied");
   } catch (error) { add("verifier", "FAIL", error.code === "ENOENT" ? `missing ${config.verification.skill}` : error.message); }
@@ -114,7 +117,8 @@ if (full) {
     const provider = config.ticketProvider.binding === "cli"
       ? local.ticketProvider?.kind === "cli" && Array.isArray(local.ticketProvider?.readCommandPatterns) && local.ticketProvider.readCommandPatterns.length && local.ticketProvider.readCommandPatterns.every((pattern) => String(pattern).startsWith("^") && String(pattern).endsWith("$"))
       : local.ticketProvider?.serverName && Array.isArray(local.ticketProvider?.readTools) && local.ticketProvider.readTools.length;
-    add("local-bindings", !missing.length && provider ? "PASS" : "FAIL", !missing.length && provider ? "models/provider bound" : `missing: ${missing.join(", ") || "provider"}`);
+    const browser = config.verification?.seam !== "browser" || (local.browser?.mcpServer && Number(local.browser?.debugPort) > 0);
+    add("local-bindings", !missing.length && provider && browser ? "PASS" : "FAIL", !missing.length && provider && browser ? "models/provider bound" : `missing: ${missing.join(", ") || "provider"}${config.verification?.seam === "browser" && !browser ? ", browser" : ""}`);
   } catch (error) { add("local-bindings", "FAIL", error.message); }
 
   try {

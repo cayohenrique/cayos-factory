@@ -16,5 +16,10 @@
   },
   "ticketProvider": { "type": "clickup", "binding": "mcp", "referencePattern": "^(clickup:)?[A-Za-z0-9_-]+$", "readOnly": true },
   "codeHost": { "type": "github", "remote": "origin", "autoMerge": false },
-  "verification": { "skill": ".cursor/skills/verify-my-project", "sourcePaths": ["src"] }
+  "verification": {
+    "skill": ".cursor/skills/verify-my-project",
+    "seam": "http",
+    "sourcePaths": ["src"],
+    "browser": { "mcpServer": "chrome-agent-mcp", "debugPort": 9222 }
+  }
 }

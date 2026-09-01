@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "chrome-agent-mcp": {
+      "command": "npx",
+      "args": ["chrome-agent-mcp"],
+      "env": {
+        "CHROME_DEBUG_PORT": "9222"
+      }
+    }
+  }
+}

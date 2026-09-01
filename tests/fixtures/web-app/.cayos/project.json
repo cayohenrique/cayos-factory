@@ -16,5 +16,10 @@
   },
   "ticketProvider": { "type": "fake", "binding": "cli", "referencePattern": "^fake:[A-Z0-9-]+$", "readOnly": true },
   "codeHost": { "type": "github", "remote": "origin", "autoMerge": false },
-  "verification": { "skill": ".cursor/skills/verify-fixture-web", "sourcePaths": ["app.mjs"] }
+  "verification": {
+    "skill": ".cursor/skills/verify-fixture-web",
+    "seam": "browser",
+    "sourcePaths": ["app.mjs"],
+    "browser": { "mcpServer": "chrome-agent-mcp", "debugPort": 9222 }
+  }
 }

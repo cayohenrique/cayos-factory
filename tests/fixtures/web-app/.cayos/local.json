@@ -1,5 +1,6 @@
 {
   "ticketProvider": { "kind": "cli", "readCommandPatterns": ["^node provider/get-task\\.mjs fake:[A-Z0-9-]+$"] },
+  "browser": { "mcpServer": "chrome-agent-mcp", "debugPort": 9222 },
   "models": {
     "orchestrator": "fixture-model",
     "implementer": "fixture-model",

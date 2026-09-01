@@ -12,7 +12,7 @@ Add this repository as a Cursor plugin source, then run:
 /cayos-mode ticket <reference>
 ```
 
-Setup scans project-approved repositories for existing code standards, asks which documents remain authoritative, proposes stack-specific fallbacks when none exist, maps the observed architecture with Mermaid, and asks whether that pattern should be followed by default. It then binds the ticket provider and model roles, discovers or creates `verify-<project>`, executes a real verification path, and records hashes in `.cayos/capabilities.lock.json`.
+Setup scans project-approved repositories for existing code standards, asks which documents remain authoritative, proposes stack-specific fallbacks when none exist, maps the observed architecture with Mermaid, and asks whether that pattern should be followed by default. It then binds the ticket provider and model roles, discovers or creates `verify-<project>`, executes a real verification path (browser via `chrome-agent-mcp` when the seam is web UI), and records hashes in `.cayos/capabilities.lock.json`.
 
 ## Guarantees
 
@@ -22,7 +22,7 @@ Setup scans project-approved repositories for existing code standards, asks whic
 - Repository writes only during `IMPLEMENTING`.
 - One registered worktree per implementation slice.
 - Small/deep/spec review routing and bounded repair loops.
-- Real project verifier with Launch, Doctor, Drive, Evidence, Cleanup, Helpers, and a feature map.
+- Real project verifier with Launch, Doctor, Drive, Evidence, Cleanup, Helpers, and a feature map. Web projects add a Browser section and drive through `chrome-agent-mcp` when `verification.seam` is `browser`.
 - Push and PR creation only after verification and explicit approval; automatic merge is forbidden.
 - Resumable runs reject changed config, HEAD, dirty state, plugin version, ticket revision, and worker drift.
 
