@@ -115,6 +115,53 @@ test("auto-approve requires auto mode and converged grill", async () => {
   assert.equal(state.approvals.sharedUnderstanding.actor, "auto-grill");
 });
 
+test("phase grill approves adjacent gates only and rejects non-adjacent or foreign gates", async () => {
+  const repo = await fixture("cayos-grill-phase-");
+  const id = await autoRun(repo);
+  const dir = path.join(repo, ".cayos/runs", id);
+  const brief = path.join(dir, "proposals", "understanding-brief.md");
+  const grill = path.join(dir, "grill", "sharedUnderstanding.json");
+  const questions = path.join(dir, "proposals", "sharedUnderstanding-questions-r1.json");
+  const answers = path.join(dir, "proposals", "sharedUnderstanding-answers-r1.json");
+  const summary = path.join(dir, "proposals", "sharedUnderstanding-summary.md");
+  await mkdir(path.dirname(brief), { recursive: true });
+  await writeFile(brief, "understanding + seam\n");
+  await writeFile(questions, JSON.stringify({ needsFollowUp: false, questions: [{ id: "1", text: "Seam?" }] }));
+  await writeFile(answers, JSON.stringify({ answers: [{ id: "1", text: "HTTP boundary" }] }));
+  await writeFile(summary, "summary\n");
+  let r = run(grillScript, ["init", "--root", repo, "--gate", "sharedUnderstanding", "--gates", "sharedUnderstanding,ticketPlan", "--proposal-file", brief], repo);
+  assert.notEqual(r.status, 0, "non-adjacent gates must be rejected");
+  r = run(grillScript, ["init", "--root", repo, "--gate", "testSeam", "--gates", "sharedUnderstanding,testSeam", "--proposal-file", brief], repo);
+  assert.notEqual(r.status, 0, "--gate must be the first gate of the phase");
+  r = run(stateScript, ["propose", "--root", repo, "--gate", "sharedUnderstanding", "--proposal-file", brief], repo);
+  assert.equal(r.status, 0, r.stderr);
+  r = run(grillScript, ["init", "--root", repo, "--gate", "sharedUnderstanding", "--gates", "sharedUnderstanding,testSeam", "--proposal-file", brief], repo);
+  assert.equal(r.status, 0, r.stderr);
+  assert.deepEqual(JSON.parse(r.stdout).gates, ["sharedUnderstanding", "testSeam"]);
+  r = run(grillScript, ["record-questions", "--root", repo, "--gate", "sharedUnderstanding", "--round", "1", "--file", questions], repo);
+  assert.equal(r.status, 0, r.stderr);
+  r = run(grillScript, ["record-answers", "--root", repo, "--gate", "sharedUnderstanding", "--round", "1", "--file", answers], repo);
+  assert.equal(r.status, 0, r.stderr);
+  r = run(grillScript, ["converge", "--root", repo, "--gate", "sharedUnderstanding", "--summary-file", summary], repo);
+  assert.equal(r.status, 0, r.stderr);
+  r = run(stateScript, ["auto-approve", "--root", repo, "--gate", "sharedUnderstanding", "--proposal-file", brief, "--grill-file", grill, "--summary-file", summary], repo);
+  assert.equal(r.status, 0, r.stderr + r.stdout);
+  assert.equal(JSON.parse(r.stdout).state, "TEST_SEAM_PENDING");
+  r = run(stateScript, ["propose", "--root", repo, "--gate", "testSeam", "--proposal-file", brief], repo);
+  assert.equal(r.status, 0, r.stderr);
+  r = run(stateScript, ["auto-approve", "--root", repo, "--gate", "testSeam", "--proposal-file", brief, "--grill-file", grill, "--summary-file", summary], repo);
+  assert.equal(r.status, 0, r.stderr + r.stdout);
+  assert.equal(JSON.parse(r.stdout).state, "PLAN_PENDING");
+  const plan = path.join(dir, "proposals", "plan-brief.md");
+  await writeFile(plan, "plan\n");
+  r = run(stateScript, ["propose", "--root", repo, "--gate", "ticketPlan", "--proposal-file", plan], repo);
+  assert.equal(r.status, 0, r.stderr);
+  r = run(stateScript, ["auto-approve", "--root", repo, "--gate", "ticketPlan", "--proposal-file", plan, "--grill-file", grill, "--summary-file", summary], repo);
+  assert.notEqual(r.status, 0, "understanding-phase grill must not approve the plan gate");
+  const state = JSON.parse(await readFile(path.join(dir, "state.json"), "utf8"));
+  assert.equal(state.state, "PLAN_PENDING");
+});
+
 test("auto-approve rejects manual runs", async () => {
   const repo = await fixture("cayos-auto-manual-");
   let r = run(stateScript, ["init", "--root", repo, "--run-id", "manual", "--ticket", "fake:SAFE-1"], repo);

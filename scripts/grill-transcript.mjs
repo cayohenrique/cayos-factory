@@ -18,7 +18,28 @@ for (let index = 0; index < raw.length; index += 1) {
 
 const root = path.resolve(String(args.root || process.cwd()));
 const gate = String(args.gate || "");
-const autoGates = new Set(["sharedUnderstanding", "testSeam", "ticketPlan", "implementation"]);
+export const GATE_ORDER = ["sharedUnderstanding", "testSeam", "ticketPlan", "implementation"];
+const autoGates = new Set(GATE_ORDER);
+
+// A grill may cover one gate or a phase of adjacent gates (e.g. sharedUnderstanding,testSeam).
+// `--gate` names the transcript file and must be the first gate of the phase.
+export function normalizeGates(primary, list) {
+  const gates = String(list || primary || "").split(",").map((item) => item.trim()).filter(Boolean);
+  if (!gates.length) throw new Error("grill requires at least one gate");
+  for (const item of gates) if (!autoGates.has(item)) throw new Error(`unsupported grill gate: ${item}`);
+  if (new Set(gates).size !== gates.length) throw new Error("grill gates must be unique");
+  const indexes = gates.map((item) => GATE_ORDER.indexOf(item)).sort((a, b) => a - b);
+  for (let index = 1; index < indexes.length; index += 1) {
+    if (indexes[index] !== indexes[index - 1] + 1) throw new Error("grill gates must be adjacent in the approval order");
+  }
+  const ordered = indexes.map((index) => GATE_ORDER[index]);
+  if (ordered[0] !== primary) throw new Error("--gate must be the first gate covered by --gates");
+  return ordered;
+}
+
+export function grillGates(transcript) {
+  return Array.isArray(transcript?.gates) && transcript.gates.length ? transcript.gates.map(String) : [String(transcript?.gate || "")];
+}
 
 const inside = async (target, base) => {
   const baseReal = await realpath(path.resolve(base));
@@ -106,6 +127,7 @@ function completedRoundCount(transcript) {
 
 async function initGrill() {
   if (!autoGates.has(gate)) throw new Error(`unsupported grill gate: ${gate}`);
+  const gates = normalizeGates(gate, args.gates);
   const { dir, state } = await activeContext();
   if (!state.autoMode) throw new Error("grill transcript requires auto mode run");
   const proposal = path.resolve(String(args["proposal-file"] || ""));
@@ -116,6 +138,7 @@ async function initGrill() {
   const transcript = {
     version: 2,
     gate,
+    gates,
     status: "OPEN",
     proposalFile: path.relative(dir, proposal),
     proposalHash,
@@ -127,7 +150,7 @@ async function initGrill() {
     updatedAt: new Date().toISOString(),
   };
   await writeJson(target, transcript);
-  console.log(JSON.stringify({ grillFile: target, gate, status: transcript.status }, null, 2));
+  console.log(JSON.stringify({ grillFile: target, gate, gates, status: transcript.status }, null, 2));
 }
 
 async function readBatchFile() {
@@ -251,6 +274,7 @@ export function grillDigest(transcript) {
     ? {
       version: transcript.version,
       gate: transcript.gate,
+      gates: transcript.gates,
       status: transcript.status,
       proposalHash: transcript.proposalHash,
       roundCount: transcript.roundCount,

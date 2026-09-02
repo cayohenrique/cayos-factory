@@ -4,12 +4,13 @@ Use this protocol for the **griller** subagent (`cayos-griller`) on `models.suba
 
 ## Inputs
 
-Read only grounded sources:
+Read only grounded sources, in this order:
 
+- `$RUN/context.md` first; do not re-map what it already covers, explore only its Open gaps and what the brief needs beyond them;
 - immutable ticket snapshot for the active run;
+- the phase brief (understanding + seam, or plan + implementation scope); one batch covers **both gates** of the phase;
 - `.cayos/project.json`, `.cayos/architecture.md`, approved standards under `.cayos/standards/`;
-- the pending proposal file for the current gate;
-- code paths cited in the ticket or proposal;
+- code paths cited in the brief that `context.md` does not already resolve;
 - when recording round 2, the completed round-1 questions and answers.
 
 Read [final-feature-bar.md](final-feature-bar.md). Default to **final production feature** unless the ticket or prompt explicitly says MVP/prototype/spike/POC.
@@ -21,6 +22,8 @@ Read [final-feature-bar.md](final-feature-bar.md). Default to **final production
 3. Set `needsFollowUp` to `true` only when round 1 answers still leave material ambiguity and a second batch round is justified. Cayos allows at most **two** batch rounds per gate.
 4. Never invent blockers. Prefer converging after round 1 when the gate can close.
 5. Never frame or recommend MVP/stub/placeholder scope unless the ticket or prompt explicitly authorizes it.
+6. Tooling, model slugs, and plugin configuration are not ticket decisions. Do not ask about them.
+7. For the plan phase, challenge slicing per `cayos-plan` → `references/slicing.md`: slices that block each other, more than two slices without a stated reason, or a missing shared contract are findings.
 
 ## Output artifact
 
@@ -51,4 +54,4 @@ node ${CURSOR_PLUGIN_ROOT}/scripts/grill-transcript.mjs record-answers --root <r
 node ${CURSOR_PLUGIN_ROOT}/scripts/grill-transcript.mjs converge --root <repo> --gate <gate> --summary-file <file>
 ```
 
-The orchestrator launches the griller **once per round** (at most twice), not once per question.
+The orchestrator launches the griller **once per round per phase** (at most twice per phase, two phases per run), not once per question and not once per gate.

@@ -4,8 +4,9 @@ Use this protocol for the **responder** subagent (`cayos-auto-responder`) on `mo
 
 ## Inputs
 
+- `$RUN/context.md` first; explore only what it does not already resolve;
 - the griller's full question batch for the active round;
-- ticket snapshot, architecture, standards, and proposal for the active gate;
+- ticket snapshot, architecture, standards, and the phase brief (both gates);
 - repository evidence needed to ground every answer.
 
 Read [final-feature-bar.md](final-feature-bar.md). Default to **final production feature** unless the ticket or prompt explicitly says MVP/prototype/spike/POC.
@@ -41,4 +42,4 @@ After producing the artifact, the orchestrator records it with:
 node ${CURSOR_PLUGIN_ROOT}/scripts/grill-transcript.mjs record-answers --root <repo> --gate <gate> --round <1|2> --file <answers.json>
 ```
 
-The orchestrator launches the responder **once per round** (at most twice), not once per question.
+The orchestrator launches the responder **once per round per phase** (at most twice per phase), not once per question and not once per gate.

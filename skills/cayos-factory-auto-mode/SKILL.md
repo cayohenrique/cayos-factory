@@ -1,6 +1,6 @@
 ---
 name: cayos-factory-auto-mode
-description: Run Cayos ticket delivery with batched grill-with-docs rounds between a griller and an advanced responder subagent.
+description: Run Cayos ticket delivery with one paired grill per phase (understanding, plan), parallel slices, and pipelined review.
 disable-model-invocation: true
 ---
 
@@ -8,30 +8,29 @@ disable-model-invocation: true
 
 Invoke only as `/cayos-factory-auto-mode ticket <reference>`. Never auto-trigger.
 
-Read [../cayos-mode/references/subagent-execution.md](../cayos-mode/references/subagent-execution.md). Stay in the current Cursor workspace for the whole run.
+Read [../cayos-mode/references/commands.md](../cayos-mode/references/commands.md) and [../cayos-mode/references/subagent-execution.md](../cayos-mode/references/subagent-execution.md). Do not read plugin scripts, agents, contracts, or tests to learn usage. Stay in the current Cursor workspace for the whole run.
 
-This skill wraps `cayos-mode` and replaces manual approval Q&A before `IMPLEMENTING` with batched grill rounds. Pull-request approval still requires an explicit user message.
+This skill wraps `cayos-mode`. Pre-implementation gates close through **two** batched grill phases instead of four, each with a paired griller and responder. Pull-request approval still requires the exact user message.
 
-Grill subagents must follow [references/final-feature-bar.md](references/final-feature-bar.md): treat work as the **final feature** unless the ticket or prompt explicitly says MVP/prototype/spike/POC.
+Grill subagents follow [references/final-feature-bar.md](references/final-feature-bar.md): final production feature unless the ticket explicitly says MVP/prototype/spike/POC.
 
 ## Models
 
-Bind in `.cayos/local.json` per [../setup-cayos-factory/references/model-policy.md](../setup-cayos-factory/references/model-policy.md). Auto-mode uses:
+- `models.subagents.grillInterviewer` → `cayos-griller`
+- `models.subagents.grillInterviewee` → `cayos-auto-responder`
 
-- `models.subagents.grillInterviewer` — batched questions (`cayos-griller`)
-- `models.subagents.grillInterviewee` — batched answers (`cayos-auto-responder`)
+If a slug fails to launch, relaunch without `model` and note it in the report. Never turn a config problem into a grill question.
 
 ## Flow
 
-1. Run Doctor full; stop unless READY. Initialize with `node ${CURSOR_PLUGIN_ROOT}/scripts/run-state.mjs init --root <repo> --run-id <id> --ticket <ref> --mode auto`.
-2. Follow `cayos-mode` through ticket resolution and snapshotting.
-3. For each pre-implementation gate (`sharedUnderstanding`, `testSeam`, `ticketPlan`, `implementation`):
-   - produce the gate proposal artifact (`cayos-understand` / `cayos-plan` as appropriate);
-   - `run-state propose`;
-   - `grill-transcript init`;
-   - **round 1:** launch **griller** once via **local** Task (`environment: "local"`) using `taskModelForSubagent("grillInterviewer", local)` and [references/grill-with-docs.md](references/grill-with-docs.md); write the questions JSON and `record-questions --round 1`; launch **responder** once via **local** Task using `taskModelForSubagent("grillInterviewee", local)` and [references/auto-responder.md](references/auto-responder.md); write the answers JSON and `record-answers --round 1`;
-   - **round 2 (optional):** only when round 1 recorded `needsFollowUp: true`; repeat griller → `record-questions --round 2` → responder → `record-answers --round 2` (at most one follow-up batch);
-   - write the gate summary, `grill-transcript converge`, then `run-state auto-approve` per [references/auto-approval.md](references/auto-approval.md).
-4. From `IMPLEMENTING` onward, continue `cayos-mode` unchanged (feature branches or registered git worktrees, local subagents, review, verify, PR). Ask the user only for `pullRequest` approval.
+1. Doctor full; stop unless READY. `run-state init --mode auto`. Resolve the ticket read-only, snapshot it, checkpoint.
+2. Explore once and write `$RUN/context.md` per [../cayos-mode/references/run-context.md](../cayos-mode/references/run-context.md). Every Task prompt from here on starts with "Read `$RUN/context.md` first; explore only its gaps."
+3. **Phase A (understanding + seam).** Write one `understanding-brief.md` with the `cayos-understand` content **and** the test seam section (including `verifiableLocally`). Then:
+   - `propose --gate sharedUnderstanding`; `grill-transcript init --gate sharedUnderstanding --gates sharedUnderstanding,testSeam`;
+   - round 1: one griller Task ([references/grill-with-docs.md](references/grill-with-docs.md)) → `record-questions --round 1`; one responder Task ([references/auto-responder.md](references/auto-responder.md)) → `record-answers --round 1`;
+   - round 2 only when round 1 set `needsFollowUp: true` (at most once);
+   - summary, `converge`, `auto-approve --gate sharedUnderstanding`; then `propose --gate testSeam` with the same brief and `auto-approve --gate testSeam` with the same grill file.
+4. **Phase B (plan + implementation scope).** Write one `plan-brief.md` with the `cayos-plan` spec, slices per [../cayos-plan/references/slicing.md](../cayos-plan/references/slicing.md), shared contract, review route per slice, and implementation scope/models. Same grill sequence with `--gate ticketPlan --gates ticketPlan,implementation`, then `auto-approve` for `ticketPlan` and `implementation`.
+5. From `IMPLEMENTING` onward follow `cayos-mode` steps 5 to 8: create all branches/worktrees and handoffs up front, launch every slice at once, review each slice as it lands, repair by resuming the original implementer, verify, report, ask for `pullRequest` approval.
 
-Never skip `propose`, grill convergence, or `auto-approve`. Never weaken verification or evidence guards.
+Never skip `propose`, grill convergence, or `auto-approve`. Never weaken verification or evidence guards. See [references/auto-approval.md](references/auto-approval.md) for the exact gate sequence.
