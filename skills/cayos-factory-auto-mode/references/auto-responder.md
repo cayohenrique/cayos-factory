@@ -1,6 +1,6 @@
 # Auto responder
 
-Use this protocol for the **responder** subagent (`cayos-auto-responder`) on `models.subagents.grillInterviewee`.
+Use this protocol for the **responder** subagent (`cayos-auto-responder`) on `models.subagents.grillInterviewee`. **Not used by `/cayos-factory-auto-mode`.**
 
 ## Inputs
 

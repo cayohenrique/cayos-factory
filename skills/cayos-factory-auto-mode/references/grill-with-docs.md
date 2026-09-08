@@ -1,6 +1,6 @@
 # Grill with docs
 
-Use this protocol for the **griller** subagent (`cayos-griller`) on `models.subagents.grillInterviewer`.
+Use this protocol for the **griller** subagent (`cayos-griller`) on `models.subagents.grillInterviewer`. **Not used by `/cayos-factory-auto-mode`.** Keep for `/cayos-mode` or an explicit grill request.
 
 ## Inputs
 

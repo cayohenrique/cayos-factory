@@ -10,6 +10,8 @@ const value = (name) => {
 };
 const root = path.resolve(value("root") || process.cwd());
 const required = ["ticket", "acceptanceCriteria", "testSeam", "snapshotId", "baseCommit", "blockers", "integratedBlockers", "worktree", "projectGuidance", "domainDecisions", "boundaries", "checks"];
+const compactRequired = ["ticket", "acceptanceCriteria", "testSeam", "snapshotId", "checks"];
+const isCompact = (payload) => payload?.kind === "compact" || (!payload?.worktree && (payload?.workspace || Array.isArray(payload?.likelyFiles)));
 
 async function insideRun(target, base) {
   const baseReal = await realpath(path.resolve(base));
@@ -33,6 +35,15 @@ async function insideRun(target, base) {
 const insideWorktree = (target, base) => path.resolve(target).startsWith(`${path.resolve(base)}${path.sep}`);
 
 function shape(payload) {
+  if (isCompact(payload)) {
+    const bad = compactRequired.filter((key) => !Object.hasOwn(payload, key));
+    if (!Array.isArray(payload.acceptanceCriteria) || !payload.acceptanceCriteria.length) bad.push("acceptanceCriteria");
+    if (!Array.isArray(payload.checks) || !payload.checks.length) bad.push("checks");
+    if (payload.likelyFiles && !Array.isArray(payload.likelyFiles)) bad.push("likelyFiles");
+    if (payload.constraints && !Array.isArray(payload.constraints)) bad.push("constraints");
+    if (payload.checks?.some((check) => /^(?:true|:|echo(?:\s+.*)?)$/i.test(String(check).trim()))) bad.push("checks");
+    return [...new Set(bad)];
+  }
   const bad = required.filter((key) => !Object.hasOwn(payload, key));
   for (const key of ["acceptanceCriteria", "boundaries", "checks"]) {
     if (!Array.isArray(payload[key]) || !payload[key].length) bad.push(key);
@@ -58,6 +69,19 @@ async function context() {
 async function operational(payload, contextState) {
   if (!contextState.state.ticketSnapshotId || payload.snapshotId !== contextState.state.ticketSnapshotId) {
     throw new Error("snapshot mismatch");
+  }
+  if (isCompact(payload)) {
+    const workspace = payload.workspace || payload.worktree;
+    const workspacePath = path.resolve(workspace?.path || contextState.state.projectRoot);
+    const branch = workspace?.branch || gitValue(workspacePath, ["rev-parse", "--abbrev-ref", "HEAD"], "");
+    const owned = (contextState.state.ownedWorktrees || []).find(
+      (item) => path.resolve(item.path) === workspacePath && item.branch === branch,
+    );
+    const projectRoot = path.resolve(contextState.state.projectRoot);
+    if (!owned && workspacePath !== projectRoot) throw new Error("workspace is not the project root or a registered worktree");
+    const base = payload.baseCommit || owned?.baseCommit || contextState.state.expectedHead;
+    if (!gitValue(workspacePath, ["rev-parse", "--verify", `${base}^{commit}`], "")) throw new Error("invalid workspace/base");
+    return;
   }
   const worktreePath = path.resolve(payload.worktree.path);
   const owned = (contextState.state.ownedWorktrees || []).find(

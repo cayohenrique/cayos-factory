@@ -14,6 +14,8 @@ const CLI_TO_SUBAGENT = {
   "medium-task": "mediumTask",
   "complex-task": "complexTask",
   reviewer: "reviewer",
+  "review-fast": "reviewFast",
+  "review-deep": "reviewDeep",
 };
 
 function parseArgs(argv) {

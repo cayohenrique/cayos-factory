@@ -186,12 +186,11 @@ If they pick Balanced, One model, or Save money, only ask for the model name(s) 
 >
 > | Job | What it does | Model |
 > |-----|----------------|-------|
-> | Auto-mode: questions | Asks about the ticket in one batch | ___ |
-> | Auto-mode: answers | Answers from docs and code | ___ |
 > | Small change | One file or small area | ___ |
 > | Medium change | Several files working together | ___ |
 > | Big change | Auth, migrations, big refactors | ___ |
-> | Code review | Read-only check of the diff | ___ |
+> | Fast review | Cheap adversarial diff review | ___ |
+> | Deep review | High-risk or security review | ___ |
 
 They can change this later with `/cayos-setup-update`.
 

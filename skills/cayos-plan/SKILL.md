@@ -1,12 +1,12 @@
 ---
 name: cayos-plan
-description: Convert approved understanding into a local spec and a small set of parallel slices with a fixed shared contract, without mutating the tracker.
+description: Convert approved understanding into a local spec and a worker plan, defaulting to one implementer.
 ---
 
 # Plan
 
-Use approved understanding, seam, snapshot, domain decisions, `$RUN/context.md`, applicable approved standards, and the validated architecture profile. Write `spec.md` with Problem Statement, Solution, user stories, Implementation Decisions, Testing Decisions, Out of Scope, and Further Notes. State whether the plan follows the approved architecture; any deviation needs evidence, tradeoffs, and user approval.
+Use approved understanding, seam, snapshot, `$RUN/context.md`, standards, and architecture. Write `spec.md` with Problem Statement, Solution, user stories, Implementation Decisions, Testing Decisions, Out of Scope, and Further Notes. State architecture follow/deviate.
 
-Slice per [references/slicing.md](references/slicing.md): by independence, never by layer; default maximum two slices; every slice can start at time zero; the shared contract (types, columns, enums, endpoints, events) is fixed in the plan so slices never wait on each other's branches. A slice may span several repositories. Each slice gets repositories, risk class and model (`taskModelForComplexity`), review route, user-facing acceptance criteria, and non-trivial checks. Record `verifiableLocally` from the approved seam.
+Slice per [references/slicing.md](references/slicing.md): **one worker by default**. Parallel workers only for independent surfaces that can start together. Auto mode may skip this skill and use `prepare.md` instead.
 
-Each slice lives on its own feature branch in this workspace (not a new Cursor workspace). See `cayos-mode` → [subagent-execution.md](../cayos-mode/references/subagent-execution.md). Ask whether slicing blocks unnecessarily or splits too finely, then obtain exact ticket-plan and implementation scope/model approvals. Store artifacts only under the active run. Create/verify all worker handoffs before delegation.
+Each worker lives on a feature branch in this workspace. Obtain ticket-plan and implementation approvals in **manual** mode only.

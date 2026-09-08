@@ -1,18 +1,14 @@
 ---
 name: cayos-review
-description: Route read-only code, spec, and risk review per slice as it lands and return actionable findings to the original implementer.
+description: Adversarial diff-first review using a risk fingerprint; re-review after any material fix.
 ---
 
 # Review
 
-Use the risk class fixed in the approved plan. Large: migrations/schema, auth/tenant isolation, public contracts, external/security/wallet flows, architecture, or broad refactors. Medium: cross-module behavior, queues/workers, dependencies, coordinated UX. Small: localized, no override.
+Call one reviewer: `cayos-reviewer` with `{ mode: "fast"|"deep", risks: [...] }` derived from the **actual diff**, not ticket size. Keep `cayos-reviewer-small`, `-deep`, and `-spec` only as internal backends if needed.
 
-Route by class, one review per slice, started as soon as that slice commits (do not wait for sibling slices):
+Fingerprint from changed files, APIs, schema, auth, queues, UI, and public contracts. Localized helpers stay `fast`. Auth, migrations, public contracts, and similar risks use `deep`. See [references/risk-fingerprint.md](references/risk-fingerprint.md).
 
-- **small** → one `cayos-reviewer-small` Task;
-- **medium** → **one** Task combining deep quality and spec review in a single prompt (`cayos-reviewer-deep` reading the spec criteria);
-- **large** → `cayos-reviewer-deep` and `cayos-reviewer-spec` launched **in parallel**.
+Launch **local** Task `subagent_type: "cayos-reviewer"` on `taskModelForReview(mode)`. Primary inputs: immutable ticket snapshot, acceptance criteria, `git diff` / `git diff --cached`, changed files, fast checks. Do not require the implementer's narrative.
 
-All review Tasks are **local** (`environment: "local"`) on `taskModelForSubagent("reviewer", local)`, read `$RUN/context.md` first, and receive the handoff, base..HEAD range, and plan criteria. See `cayos-mode` → [subagent-execution.md](../cayos-mode/references/subagent-execution.md).
-
-Review diff, guidance, ADRs, tests, structural regressions, boundary leaks, types, atomicity, and unnecessary abstraction. Reviewers never edit. Findings return to the **original implementer by resuming its Task**; the orchestrator verifies non-critical fixes from `git diff` itself and launches a re-review Task only for critical/high findings. Stop after two unresolved correction cycles.
+The reviewer tries to prove the implementation wrong. Findings return by Task `resume`. After any material production-code change, review again. Mechanical-only edits may skip re-review. Stop after two unresolved correction cycles. Never edit. See [references/adversarial-review.md](references/adversarial-review.md).

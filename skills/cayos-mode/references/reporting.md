@@ -1,3 +1,29 @@
 # Reporting
 
-Maintain append-only events and a concise report under the run directory. Include stages, agents, selected models/effort, snapshots, external reads, estimates, latency, retries, commits, review disposition, verification evidence, integration, and PR decision. Final chat explains what changed, how, participants, tests/evidence, PR state, and report location.
+Keep an append-only journal. The user-facing delivery report should emphasize engineering evidence:
+
+```markdown
+# Delivery Report
+
+## Changed
+- ...
+
+## Fast checks
+- ...
+
+## Review
+Pass 1: ...
+Repair: ...
+Pass 2: clean
+
+## Real verification
+Seam: browser | http | cli
+Action: ...
+Observed result: ...
+Evidence: ...
+
+## Remaining risks
+...
+```
+
+Do not list every internal state transition unless the user asks.

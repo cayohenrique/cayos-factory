@@ -18,11 +18,11 @@ Use this skill when the project is already configured and only local bindings ne
 ## Flow
 
 1. Run Doctor without `--full` and stop if project config or verifier structure is broken.
-2. Ask what should change. Show all six current `models.subagents` bindings and confirm new slugs.
+2. Ask what should change. Show current implementation and review bindings. Grill keys are optional.
 3. Apply only approved changes:
 
 ```text
-node ${CURSOR_PLUGIN_ROOT}/scripts/setup-update.mjs models --root <repo> [--grill-interviewer <model>] [--grill-interviewee <model>] [--small-task <model>] [--medium-task <model>] [--complex-task <model>] [--reviewer <model>] [--fast <model>] [--judgment <model>]
+node ${CURSOR_PLUGIN_ROOT}/scripts/setup-update.mjs models --root <repo> [--small-task <model>] [--medium-task <model>] [--complex-task <model>] [--reviewer <model>] [--review-fast <model>] [--review-deep <model>] [--fast <model>] [--judgment <model>]
 ```
 
 4. Run Doctor full. Report READY or the exact failing check.

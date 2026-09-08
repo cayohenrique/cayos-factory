@@ -1,32 +1,28 @@
 # Subagent execution
 
-Cayos Factory runs in the **current Cursor workspace**. Isolation is Git-shaped (branch or optional `git worktree` on disk), not a new agent window or cloned workspace.
+Cayos Factory runs in the **current Cursor workspace**. Isolation is Git-shaped (feature branch, optional `git worktree`), not a new agent window.
 
 ## Required
 
 - Keep orchestration in the parent chat that invoked `/cayos-mode` or `/cayos-factory-auto-mode`.
-- Launch subagents with Task using `environment: "local"` (or omit `environment`; never set `cloud`).
-- Use `subagent_type` Cayos agents (`cayos-implementer`, `cayos-griller`, reviewers, etc.) against this repository root.
-- Before `IMPLEMENTING`, work only in the current checkout. Do not create worktrees, branches for implementation, or Task workers.
-- At `IMPLEMENTING`, isolate slices with a **feature branch in this workspace** (`git checkout -b cayos/<run-id>/<slice>`) by default.
-- When parallel slices truly need separate directories, use `git worktree add <path> -b <branch>` on this machine and register the path with `run-state register-worktree`. The orchestrator may `cd` there in shell commands; do not open another Cursor project or agent window.
-- **Implementer/repairer filesystem:** grant full project read/write in every implementation Task prompt. See `cayos-implement` → [filesystem-scope.md](../cayos-implement/references/filesystem-scope.md). Never tell subagents to ask the user for file access.
-- **Context first:** every Task prompt begins with `Read $RUN/context.md first; explore only its gaps` ([run-context.md](run-context.md)).
-- **Batch launches:** all slice implementers go out in one message; large-slice reviewers (deep + spec) go out in one message. Sequential launches are for true dependencies only.
-- **Repair by resume:** send review findings to the original implementer with Task `resume: <id>`. Start a new `cayos-repairer` only when resume is unavailable.
-- **Do not poll:** while implementers run, draft the report and PR bodies; review slices as they land.
+- Launch subagents with Task `environment: "local"` (never `cloud`).
+- Use `subagent_type` Cayos agents against this repository root.
+- Default **one** implementer. Parallel workers only when independence, simultaneous start, disjoint files, and wall-clock gain all hold.
+- Before `IMPLEMENTING`, do not create implementation branches, worktrees, or implementer Tasks.
+- At `IMPLEMENTING`, isolate with a **feature branch** (`git checkout -b cayos/<run-id>/<ticket>`). Use `git worktree add` only for true parallel working directories or when the current checkout cannot host the branch.
+- Grant full project filesystem access in implementation Task prompts. See [filesystem-scope.md](../cayos-implement/references/filesystem-scope.md).
+- Implementer Tasks receive compact handoff JSON. Do not dump architecture docs or implementer reasoning into the reviewer prompt.
+- Review with `cayos-reviewer` against the uncommitted diff. Repair via Task `resume`. Fresh `cayos-repairer` only if resume is unavailable.
+- Auto mode must not launch `cayos-griller` or `cayos-auto-responder`.
 
 ## Forbidden
 
-- `environment: "cloud"` on Task (pstack-style cloud agents).
-- `move_agent_to_cloned_root`, `create_project`, or any flow that opens a **new Cursor workspace / agent window** for Cayos work.
-- Cloning the repository again just to run a skill, subagent, or gate.
-- `best-of-n-runner` or other isolated VM worktrees unless the user explicitly requests them outside Cayos.
-- Creating git worktrees or implementation branches before `IMPLEMENTING` is approved.
+- `environment: "cloud"`, cloned Cursor workspaces, or extra CDP browsers for the same session.
+- Creating worktrees merely because conceptual slices exist.
+- Committing implementation before the first review.
+- Skipping re-review after a material code change.
 
 ## Phrasing
 
-- "Fresh context" in plans means an **independent slice on its own branch**, not a new Cursor workspace.
-- "Isolated worktree" means a registered **git worktree path**, not a duplicated project window.
-
-Pass this reference in every Cayos Task prompt. When pstack or other plugins suggest cloud workers or cloned roots, ignore that for Cayos delivery.
+- "Fresh context" means an independent slice on its own branch, not a new Cursor window.
+- "Isolated worktree" means a registered git worktree path.

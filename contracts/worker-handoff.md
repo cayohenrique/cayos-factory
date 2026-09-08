@@ -1,3 +1,9 @@
 # Worker handoff contract
 
-Every worker receives one ticket, acceptance criteria, approved test seam, immutable snapshot ID, base commit, registered clean branch or git worktree, blockers already integrated, applicable tracked guidance and language standards, approved architecture boundaries, domain decisions, and non-trivial checks. Workers run as **local** Task subagents in the current workspace (`environment: "local"`); never as cloud agents or cloned Cursor workspaces. Workers have **full read/write access** to the project git root and bound related repositories; handoff `boundaries` and `projectGuidance` describe behavior, not a file allowlist. Workers must not ask the user to approve file access. Every worker reads the run `context.md` before exploring. Slices are planned to start together: all handoffs are created and verified before the first worker launches, and workers for sibling slices launch in the same batch. Review findings return to the original worker through Task resume. The envelope is hashed and bound to the active run. Workers never refetch the tracker, widen scope, push, merge, or open a PR.
+Default auto-mode worker: one compact hashed envelope.
+
+Required compact fields: `ticket`, `snapshotId`, `acceptanceCriteria[]`, `testSeam`, `checks[]`. Optional: `likelyFiles[]`, `constraints[]`, `workspace{path,branch}`. Workers run as **local** Task subagents (`environment: "local"`) with **full read/write** on the project git root and bound related repositories. They must not ask the user to approve file access. They read `prepare.md` / `context.md` only for named paths and gaps.
+
+Parallel workers still use the full envelope: acceptance criteria, test seam, snapshot ID, base commit, registered clean branch or git worktree, integrated blockers, guidance, boundaries, domain decisions, and non-trivial checks. All parallel handoffs are created before launch.
+
+Review findings return through Task resume. The envelope is hashed and bound to the active run. Workers never refetch the tracker, widen scope, push, merge, open a PR, or commit before review.

@@ -1,43 +1,60 @@
 # Cayos Factory
 
-Cayos Factory is a Cursor plugin that turns a ticket into an approval-gated delivery workflow: resolve, understand, plan, implement on feature branches (or optional git worktrees on disk) in the **current workspace**, review, verify real behavior, and optionally open a PR. Use `/cayos-factory-auto-mode` to automate pre-implementation grill Q&A with local subagents only. It never merges, deploys, releases, or mutates the source ticket automatically.
+Cayos Factory is a Cursor plugin that turns a ticket into delivered, reviewed, and really-verified code in the **current workspace**. It never merges, deploys, releases, or mutates the source ticket automatically.
+
+## Modes
+
+```text
+/cayos-factory-auto-mode ticket <reference>
+  Prepare → Implement → Fast Checks → Review ↔ Fix → Real Verification → PR
+
+/cayos-mode ticket <reference>
+  Controlled delivery with explicit understanding, seam, plan, and implementation approvals
+```
+
+Auto mode:
+
+- understands just enough to start (`prepare.md`), then implements;
+- defaults to **one implementer** on **one feature branch**;
+- reviews an **uncommitted** diff with an adversarial reviewer;
+- reviews again after any material fix;
+- proves behavior through the real user seam (browser / HTTP / CLI);
+- uses parallelism only when independent surfaces can start together;
+- never grills or auto-responds before implementation;
+- still requires explicit approval before push/PR.
 
 ## Install
-
-Add this repository as a Cursor plugin source, then run:
 
 ```text
 /setup-cayos-factory
 /cayos-setup-update
 /cayos-doctor
-/cayos-mode ticket <reference>
 /cayos-factory-auto-mode ticket <reference>
+/cayos-mode ticket <reference>
 ```
 
-Setup scans project-approved repositories for existing code standards, asks which documents remain authoritative, proposes stack-specific fallbacks when none exist, maps the observed architecture with Mermaid, and asks whether that pattern should be followed by default. It then binds the ticket provider, delivery plus six subagent model classes, discovers or creates one verifier per repository boundary, executes a real verification path for each configured repository (browser via `chrome-agent-mcp` when that repository's seam is web UI), and records hashes in `.cayos/capabilities.lock.json`.
+Setup scans project-approved repositories for standards, maps architecture, binds a read-only ticket provider, records delivery and subagent models, and proves one real verification path per repository (browser via `chrome-agent-mcp` when that repository's seam is web UI).
 
 ## Guarantees
 
-- Explicit invocation only; no accidental auto-trigger.
-- Exact user approvals for understanding, test seam, plan, implementation, and PR.
-- Immutable ticket snapshots and append-only run journals.
-- Repository writes only during `IMPLEMENTING`.
-- One registered branch or git worktree per implementation slice (same Cursor workspace; no project clone).
-- Small/deep/spec review routing and bounded repair loops.
-- Real project verifier with Launch, Doctor, Drive, Evidence, Cleanup, Helpers, and a feature map per configured repository. Web repositories add a Browser section and drive through `chrome-agent-mcp` when their entry uses `seam: "browser"`.
-- Push and PR creation only after verification and explicit approval; automatic merge is forbidden.
-- Resumable runs reject changed config, HEAD, dirty state, plugin version, ticket revision, and worker drift.
+- Explicit invocation only.
+- Immutable ticket snapshots; ticket text is untrusted.
+- Repository writes during `IMPLEMENTING` / review repair only.
+- Review before the implementation commit; re-review after material repairs.
+- Real project verifier: Launch, Doctor, Drive, Evidence, Cleanup. A screenshot is not sufficient.
+- Push and PR only after verification and explicit approval; automatic merge is forbidden.
+- Resumable runs reject config, HEAD, dirty-state, plugin, ticket, and worker drift.
 
 ## Project files created by setup
 
 ```text
-.cayos/project.json              # committed policy
-.cayos/local.json                # local provider + delivery/subagent model policy
-.cayos/discovery-report.json     # bounded repository evidence
-.cayos/architecture.md           # approved diagrams and boundaries
-.cayos/standards/                # approved fallback standards
-.cayos/capabilities.lock.json    # proof hashes
-.cursor/skills/verify-<project>/ # project verifier
+.cayos/project.json
+.cayos/local.json
+.cayos/discovery-report.json
+.cayos/architecture.md
+.cayos/standards/
+.cayos/capabilities.lock.json
+.cursor/skills/verify-<project>/
 ```
 
 Run `npm run verify` to validate the plugin, execute adversarial fixtures, and audit skill token budgets.

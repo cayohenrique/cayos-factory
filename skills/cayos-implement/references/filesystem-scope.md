@@ -14,7 +14,7 @@ The handoff defines **ticket behavior**, API boundaries, and checks. It is **not
 
 - Do **not** ask the user to approve reading or editing project files. You already have full project access for this run.
 - Do **not** stop work to request "permission" for paths outside the handoff list when those files are needed to implement or verify the slice.
-- Prefer the registered branch/worktree for commits, but explore the wider repository freely.
+- Prefer the registered feature branch (or worktree) for edits, but explore the wider repository freely. Do not commit before review.
 - Never edit unrelated slices, push, merge, open PRs, or mutate the ticket provider.
 
 ## Orchestrator Task prompt
